@@ -1,0 +1,181 @@
+{% extends '@TacticMediaQa/layout.html.twig' %}
+
+{% import '@TacticMediaQa/_ui.html.twig' as ui %}
+
+{#
+    Set at template level so every block sees them: page_actions renders outside
+    the annotate controller's element, so the keyboard handler takes the
+    destinations as Stimulus values and the visible buttons reuse the same URLs.
+    back_href feeds only the keyboard handler; no visible link uses it.
+
+    Up/down keep the screen and swap the group; a group that never captured this
+    screen has no annotate page, so it opens on its grid instead.
+#}
+{% set back_href = path('qa_screenshots_group', {mode, viewport}) ~ '#' ~ screen.anchor %}
+{% set above_href = navigation.screenAbove is not null
+    ? path('qa_screenshots_annotate', {mode: navigation.above.mode, viewport: navigation.above.viewport, name: navigation.screenAbove.name})
+    : path('qa_screenshots_group', {mode: navigation.above.mode, viewport: navigation.above.viewport}) %}
+{% set below_href = navigation.screenBelow is not null
+    ? path('qa_screenshots_annotate', {mode: navigation.below.mode, viewport: navigation.below.viewport, name: navigation.screenBelow.name})
+    : path('qa_screenshots_group', {mode: navigation.below.mode, viewport: navigation.below.viewport}) %}
+{% set above_label = navigation.above.mode|capitalize ~ ' · ' ~ navigation.above.viewport|replace({'x': '×'}) %}
+{% set below_label = navigation.below.mode|capitalize ~ ' · ' ~ navigation.below.viewport|replace({'x': '×'}) %}
+
+{% block page_title %}{{ screen.label }}{% endblock %}
+
+{% block page_subtitle %}
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        {{ screen.class }} · {{ screen.method }} · capture #{{ screen.sequence }}{% if orientation %} · {{ orientation }}{% endif %}
+    </p>
+{% endblock %}
+
+{% block page_actions %}
+    {{ ui.button('Previous', path('qa_screenshots_annotate', {mode, viewport, name: navigation.previous.name}), 'secondary') }}
+    <span class="text-sm text-gray-500 dark:text-gray-400">{{ navigation.position }} / {{ navigation.total }}</span>
+    {{ ui.button('Next', path('qa_screenshots_annotate', {mode, viewport, name: navigation.next.name}), 'secondary') }}
+    {{ ui.button(ui.icon('up') ~ '<span class="sr-only">' ~ above_label|e ~ '</span>', above_href, 'secondary') }}
+    {{ ui.button(ui.icon('down') ~ '<span class="sr-only">' ~ below_label|e ~ '</span>', below_href, 'secondary') }}
+    {{ parent() }}
+{% endblock %}
+
+{% block review_content %}
+    {% set pending = pending_rectangle|default(null) %}
+    {% set pendingSize = pending_image_size|default(null) %}
+
+    {# keydown.meta+enter carries no @window: it fires only inside this element, which
+       is where every note form lives. Stimulus matches modifiers strictly, so meta and
+       ctrl need separate descriptors and the arrows never fire while one is held. #}
+    <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
+         {{ stimulus_controller('qa-annotate', {
+                previousUrl: path('qa_screenshots_annotate', {mode, viewport, name: navigation.previous.name}),
+                nextUrl: path('qa_screenshots_annotate', {mode, viewport, name: navigation.next.name}),
+                aboveUrl: above_href,
+                belowUrl: below_href,
+                backUrl: back_href,
+            })
+            |stimulus_action('qa-annotate', 'previous', 'keydown.left@window')
+            |stimulus_action('qa-annotate', 'next', 'keydown.right@window')
+            |stimulus_action('qa-annotate', 'above', 'keydown.up@window')
+            |stimulus_action('qa-annotate', 'below', 'keydown.down@window')
+            |stimulus_action('qa-annotate', 'cancel', 'keydown.esc@window')
+            |stimulus_action('qa-annotate', 'submit', 'keydown.meta+enter')
+            |stimulus_action('qa-annotate', 'submit', 'keydown.ctrl+enter') }}>
+
+        <div class="relative touch-none overflow-hidden overflow-y-auto rounded-lg border border-gray-200 bg-zinc-100 dark:border-white/10 dark:bg-zinc-800"
+             {{ stimulus_target('qa-annotate', 'stage')
+                |stimulus_action('qa-annotate', 'start', 'pointerdown')
+                |stimulus_action('qa-annotate', 'move', 'pointermove')
+                |stimulus_action('qa-annotate', 'end', 'pointerup')
+                |stimulus_action('qa-annotate', 'end', 'pointercancel') }}>
+
+            <img src="{{ path('qa_screenshots_raw', {mode, viewport, name: screen.name}) }}"
+                 alt="{{ screen.label }}" draggable="false"
+                 class="mx-auto block max-h-full select-none"
+                 {{ stimulus_target('qa-annotate', 'image') }} />
+
+            <div hidden class="pointer-events-none absolute border-2 border-red-500 bg-red-500/20"
+                 {{ stimulus_target('qa-annotate', 'selection') }}></div>
+
+            {% for note in notes %}
+                {% if not note.wholeScreen %}
+                <div hidden class="pointer-events-none absolute border-2 border-amber-500 bg-amber-400/20"
+                     data-rect-x="{{ note.rectangle.x }}"
+                     data-rect-y="{{ note.rectangle.y }}"
+                     data-rect-width="{{ note.rectangle.width }}"
+                     data-rect-height="{{ note.rectangle.height }}"
+                     data-image-width="{{ note.imageSize.width }}"
+                     data-image-height="{{ note.imageSize.height }}"
+                     {{ stimulus_target('qa-annotate', 'marker') }}>
+                    <span class="absolute -top-0.5 -left-0.5 bg-amber-500 px-1 text-xs font-bold text-amber-950">{{ loop.index }}</span>
+                </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+
+        <div>
+            <form method="post" action="{{ path('qa_screenshots_feedback_create') }}"
+                  class="rounded-lg border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
+                {# Stateless token: the host's csrf-protection controller must double-submit it, or a
+                   browser whose session already used double-submit has the POST rejected. #}
+                <input type="hidden" name="_token" value="{{ csrf_token('screenshot-review') }}" {{ stimulus_controller('csrf-protection') }}>
+                <input type="hidden" name="mode" value="{{ mode }}">
+                <input type="hidden" name="viewport" value="{{ viewport }}">
+                <input type="hidden" name="name" value="{{ screen.name }}">
+
+                <input type="hidden" name="x" value="{{ pending.x|default('') }}" {{ stimulus_target('qa-annotate', 'x') }}>
+                <input type="hidden" name="y" value="{{ pending.y|default('') }}" {{ stimulus_target('qa-annotate', 'y') }}>
+                <input type="hidden" name="width" value="{{ pending.width|default('') }}" {{ stimulus_target('qa-annotate', 'width') }}>
+                <input type="hidden" name="height" value="{{ pending.height|default('') }}" {{ stimulus_target('qa-annotate', 'height') }}>
+                <input type="hidden" name="image_width" value="{{ pendingSize.width|default('') }}" {{ stimulus_target('qa-annotate', 'imageWidth') }}>
+                <input type="hidden" name="image_height" value="{{ pendingSize.height|default('') }}" {{ stimulus_target('qa-annotate', 'imageHeight') }}>
+
+                <h2 class="text-sm font-semibold text-gray-900 dark:text-slate-200">Add a note</h2>
+                <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                    Drag on the screenshot to pick an area, or just write to note the whole screen.
+                </p>
+
+                <p class="mt-3 flex items-center justify-between gap-2 text-xs">
+                    <span class="font-medium text-gray-700 dark:text-gray-300" {{ stimulus_target('qa-annotate', 'summary') }}>
+                        {% if pending %}{{ pending.width }} × {{ pending.height }} px at {{ pending.x }}, {{ pending.y }}{% else %}Whole screen{% endif %}
+                    </span>
+                    {{ ui.button('Clear area', null, 'ghost', stimulus_action('qa-annotate', 'clear', 'click'), 'px-2 py-1 text-xs', 'button') }}
+                </p>
+
+                <textarea name="note" rows="4" required placeholder="What is wrong here?"
+                          class="mt-3 block w-full rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 placeholder:text-gray-400 focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 dark:bg-white/5 dark:text-slate-200 dark:outline-white/10"
+                          {{ stimulus_target('qa-annotate', 'note') }}></textarea>
+
+                {% if note_missing|default(false) %}
+                    <p class="mt-2 text-sm text-red-600 dark:text-red-400">Write a note before saving.</p>
+                {% endif %}
+
+                {{ ui.button('Save note', null, 'primary', null, 'mt-3 w-full') }}
+            </form>
+
+            <h2 class="mt-6 text-sm font-semibold text-gray-900 dark:text-slate-200">
+                Notes on this screen ({{ notes|length }})
+            </h2>
+
+            {% if notes is empty %}
+                {{ ui.empty_state('Nothing noted yet', 'No feedback on this screen yet. Drag over what is wrong and write a note.') }}
+            {% else %}
+                <ul role="list" class="mt-3 space-y-3">
+                    {% for note in notes %}
+                        <li class="rounded-lg border border-gray-200 bg-white p-3 dark:border-white/10 dark:bg-white/5">
+                            <div class="flex items-start justify-between gap-2">
+                                <p class="text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    {% if note.wholeScreen %}
+                                        Whole screen
+                                    {% else %}
+                                        <span class="mr-1 bg-amber-500 px-1 font-bold text-amber-950">{{ loop.index }}</span>
+                                        Area {{ note.rectangle.width }} × {{ note.rectangle.height }} px at {{ note.rectangle.x }}, {{ note.rectangle.y }}
+                                    {% endif %}
+                                </p>
+                                {# No confirm dialog: the e2e suite drives this form, WebDriver
+                                   auto-dismisses dialogs, and the form.submit() workaround skips
+                                   the event the double-submit listener rides on. Clear-all keeps
+                                   its dialog because no e2e drives it. #}
+                                <form method="post" action="{{ path('qa_screenshots_feedback_delete', {id: note.id}) }}">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('screenshot-review') }}" {{ stimulus_controller('csrf-protection') }}>
+                                    {{ ui.button(ui.icon('trash', 'size-4') ~ '<span class="sr-only">Withdraw</span>', null, 'ghost', null, 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10') }}
+                                </form>
+                            </div>
+
+                            <p class="mt-1 text-sm whitespace-pre-line text-gray-900 dark:text-slate-200">{{ note.note }}</p>
+
+                            <details class="mt-2">
+                                <summary class="cursor-pointer text-xs font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">Edit</summary>
+                                <form method="post" action="{{ path('qa_screenshots_feedback_update', {id: note.id}) }}" class="mt-2">
+                                    <input type="hidden" name="_token" value="{{ csrf_token('screenshot-review') }}" {{ stimulus_controller('csrf-protection') }}>
+                                    <textarea name="note" rows="3" required
+                                              class="block w-full rounded-md bg-white px-3 py-1.5 text-sm text-gray-900 outline-1 -outline-offset-1 outline-gray-300 focus:outline-2 focus:-outline-offset-2 focus:outline-amber-600 dark:bg-white/5 dark:text-slate-200 dark:outline-white/10">{{ note.note }}</textarea>
+                                    {{ ui.button('Save changes', null, 'secondary', null, 'mt-2 w-full py-1 text-xs') }}
+                                </form>
+                            </details>
+                        </li>
+                    {% endfor %}
+                </ul>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,85 @@
+{#
+    Screenshot review shell: the sidebar lists every mode/viewport group the last
+    journey run produced, with its outstanding feedback count.
+
+    Pages fill {% block review_content %}. A capture page overriding page_actions
+    calls {{ parent() }} to keep the Generate prompt action; the prompt page is
+    the exception - it has no use for a link to itself.
+
+    Override this template from the host at
+    templates/bundles/TacticMediaQaBundle/layout.html.twig to put the review
+    inside your own shell. The blocks meant for that are `title`, `brand`,
+    `styles`, `scripts` and `sidebar`.
+
+    The default `styles` block loads Tailwind from a CDN, which a strict
+    content security policy blocks. Such a host overrides the template and links
+    its own compiled stylesheet.
+
+    The default `scripts` block is for an AssetMapper host. A Webpack Encore or
+    Symfony Reprise host overrides it with its own entry tag function.
+#}
+{% import '@TacticMediaQa/_ui.html.twig' as ui %}
+
+<!DOCTYPE html>
+<html lang="en" class="h-full">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}{% block page_title %}Screenshot review{% endblock %}{% endblock %}</title>
+    {% block styles %}
+        <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    {% endblock %}
+    {% block scripts %}
+        {{ include('@TacticMediaQa/_importmap.html.twig') }}
+    {% endblock %}
+</head>
+<body class="h-full bg-white text-gray-900 dark:bg-black dark:text-slate-300">
+    <div class="flex min-h-full">
+        {% block sidebar %}
+            <nav aria-label="Screenshot groups" class="hidden w-64 shrink-0 flex-col gap-y-4 overflow-y-auto border-r border-gray-200 px-4 py-6 lg:flex dark:border-white/10">
+                {% block brand %}{% endblock %}
+                <ul role="list" class="space-y-1">
+                    {% for group in groups %}
+                        {% set active = group.mode == mode and group.viewport == viewport %}
+                        <li>
+                            <a href="{{ path('qa_screenshots_group', {mode: group.mode, viewport: group.viewport}) }}"
+                               class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm font-medium {{ active
+                                   ? 'bg-gray-100 text-gray-900 dark:bg-white/10 dark:text-white'
+                                   : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900 dark:text-gray-400 dark:hover:bg-white/5 dark:hover:text-white' }}">
+                                {{ ui.icon(group.mode == 'dark' ? 'moon' : 'sun', 'size-4 shrink-0') }}
+                                <span class="truncate">{{ group.mode|capitalize }} · {{ group.viewport|replace({'x': '×'}) }}</span>
+                                {% if feedback_counts[group.key]|default(0) %}
+                                    <span class="ml-auto rounded-full bg-amber-100 px-2 py-0.5 text-xs font-semibold text-amber-900 dark:bg-amber-400/20 dark:text-amber-200">
+                                        {{ feedback_counts[group.key] }}
+                                    </span>
+                                {% endif %}
+                            </a>
+                        </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+        {% endblock %}
+
+        <main class="min-w-0 flex-1 px-4 py-6 sm:px-6 lg:px-8">
+            <div class="mb-8 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+                <div>
+                    {% block page_back %}{% endblock %}
+                    <h1 class="text-2xl font-semibold tracking-tight text-gray-900 dark:text-slate-200">{{ block('page_title') }}</h1>
+                    {% block page_subtitle %}{% endblock %}
+                </div>
+                <div class="flex items-center gap-3">
+                    {% block page_actions %}
+                        {{ ui.button(
+                            ui.icon('list') ~ 'Generate prompt' ~ (feedback_total ? ' (' ~ feedback_total ~ ')' : ''),
+                            path('qa_screenshots_prompt'),
+                            'secondary',
+                        ) }}
+                    {% endblock %}
+                </div>
+            </div>
+
+            {% block review_content %}{% endblock %}
+        </main>
+    </div>
+</body>
+</html>

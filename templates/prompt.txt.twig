@@ -1,0 +1,105 @@
+A human reviewed the screenshots from the latest end-to-end journey run and left
+the visual feedback below: broken layout, wrong colours, unreadable contrast,
+rendering errors. Fix what they reported.
+
+Read this repository's own conventions before changing anything - the coding
+standards it documents outrank anything you would otherwise reach for.
+
+How to find the code behind a screenshot: every image was captured by a
+captureFullPageScreenshot($client, '<label>') call inside the test method named
+below. Search the test file for that label to see exactly where in the journey the
+screen was reached, then follow the controller and template it renders.
+
+How to read a note: "Area" is the region the reviewer dragged, in natural image
+pixels of a full-page capture - x from the left edge of the page, y from the very
+top of the page, not the top of the viewport. "Whole screen" means the note is about
+the screen as a whole. Read the cropped view first, where the selection is outlined
+in red, and open the full screenshot only for the surrounding context.
+
+How to locate a selection in the code: "Page" is the URL the journey was on when it
+took the capture. Open it to see the screen live, and read its path for the route,
+which names the controller and the template. Then grep for the element text, for the
+distinctive class strings, and for the structure the selector describes.
+
+That URL is the end-to-end application, whose database the journeys seed and reset.
+The same route on your development application holds different records, so a URL
+naming a specific id may 404 there.
+
+{% for class, screens in entries %}
+================================================================================
+TEST CASE: {{ class }}
+{% for name, rows in screens %}
+{% set screen = rows|first.screen %}
+{% set origin = rows|first.metadata %}
+{% if screen %}
+{% if origin and origin.testFile %}
+FILE:   {{ origin.testFile }}
+{% endif %}
+METHOD: {{ screen.method }}
+SCREEN: "{{ screen.label }}" (capture #{{ screen.sequence }} in the journey)
+{% else %}
+SCREEN: {{ name }} (filename could not be parsed)
+{% endif %}
+{% for row in rows %}
+
+  - Screenshot: {{ row.path ?? (row.item.name ~ '.png (no longer in the tree)') }}
+    Mode: {{ row.item.mode }} | Viewport: {{ row.item.viewport }} ({{ row.orientation }})
+{% if row.item.wholeScreen %}
+    Area: whole screen
+{% else %}
+    Area: x={{ row.item.rectangle.x }}, y={{ row.item.rectangle.y }}, width={{ row.item.rectangle.width }}, height={{ row.item.rectangle.height }} (image is {{ row.item.imageSize.width }}x{{ row.item.imageSize.height }} px)
+{% endif %}
+{% if row.metadata %}
+    Page: {{ row.metadata.url }} ("{{ row.metadata.title }}")
+{% endif %}
+{% if row.crop %}
+    Cropped view (selection outlined in red): {{ row.crop }}
+{% endif %}
+{% if row.resolution and row.resolution.layoutChanged %}
+    Warning: the page changed size after this note was written, so the coordinates
+             and the crop no longer point at what was reported. Go by the note text
+             and the page above.
+{% elseif row.resolution %}
+{% if row.resolution.selected is not empty %}
+    The selection contains:
+{% for element in row.resolution.selected %}
+      - <{{ element.tag }}>{{ element.text ? ' "' ~ element.text ~ '"' : '' }}
+        selector: {{ element.selector }}
+{% if element.classes %}
+        classes: {{ element.classes }}
+{% endif %}
+{% for attribute, value in element.attributes %}
+        {{ attribute }}: {{ value }}
+{% endfor %}
+{% endfor %}
+{% endif %}
+{% if row.resolution.enclosing is not empty %}
+    Inside:
+{% for element in row.resolution.enclosing %}
+      - <{{ element.tag }}> {{ element.selector }}
+{% endfor %}
+{% endif %}
+{% endif %}
+{% if row.stale %}
+    Note: this file is missing from the current run, so it came from an earlier one.
+          The test, method and screen above still identify what was reviewed.
+{% endif %}
+    Feedback: {{ row.item.note }}
+{% endfor %}
+{% endfor %}
+
+{% endfor %}
+================================================================================
+
+Instructions:
+
+1. Reproduce each issue by looking at the named screenshot before you change code.
+2. Fix it in the template, component or stylesheet that renders the screen, not by
+   patching the test.
+3. Keep light and dark parity: a fix verified in one mode must be checked in the
+   other, and the same screen exists at every captured viewport.
+4. Follow this repository's conventions for markup, styling, wording and client-side
+   behaviour rather than inventing new ones.
+5. If you change user-facing behaviour, update the journey that owns that surface in
+   the same change.
+6. When you are done, re-run the journeys and review the regenerated screenshots.

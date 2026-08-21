@@ -1,0 +1,117 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  qa:
+    name: QA (PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The floor, both supported LTS branches, and what the first consumer runs.
+        include:
+          - php: '8.2'
+            symfony: '6.4.*'
+          - php: '8.3'
+            symfony: '7.4.*'
+          - php: '8.4'
+            symfony: '8.1.*'
+            reprise: true
+          - php: '8.5'
+            symfony: '8.1.*'
+            reprise: true
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: gd, intl
+          coverage: none
+
+      # Flex is global so no recipe touches the checkout. Without it composer
+      # pins only the packages named in composer.json and lets the transitive
+      # Symfony packages float to their latest branch, which passes while
+      # proving nothing.
+      - name: Pin the Symfony branch
+        run: |
+          composer global config --no-plugins allow-plugins.symfony/flex true
+          composer global require --no-progress --no-scripts --no-plugins symfony/flex
+          composer config extra.symfony.require "${{ matrix.symfony }}"
+
+      - run: composer update --no-progress
+
+      # symfony/reprise needs PHP 8.4 and Symfony 7.4, so require-dev would make the lower
+      # legs uninstallable. Installed here, RepriseHostTest stops skipping and PHPStan reads
+      # the fixture kernel against the real class - the legs without it prove the other
+      # direction, that the skip and the ignored errors still hold.
+      - if: matrix.reprise
+        run: composer require --dev --no-progress "symfony/reprise:^0.8"
+
+      - run: vendor/bin/phpstan analyse --no-progress
+
+      - run: vendor/bin/phpunit --exclude-group e2e
+
+  style:
+    name: Style
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.5'
+          extensions: gd, intl
+          coverage: none
+
+      - run: composer validate --strict
+
+      - uses: ramsey/composer-install@v3
+
+      - run: composer cs:check
+
+  panther:
+    name: Panther (PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.2'
+            symfony: '6.4.*'
+          - php: '8.5'
+            symfony: '8.1.*'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: gd, intl
+          coverage: none
+
+      - name: Pin the Symfony branch
+        run: |
+          composer global config --no-plugins allow-plugins.symfony/flex true
+          composer global require --no-progress --no-scripts --no-plugins symfony/flex
+          composer config extra.symfony.require "${{ matrix.symfony }}"
+
+      - run: composer update --no-progress
+
+      - run: vendor/bin/bdi detect drivers
+
+      - run: vendor/bin/phpunit --group e2e
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: panther-failures-php${{ matrix.php }}
+          path: tests/Fixtures/app/var/error-screenshots
+          if-no-files-found: ignore

@@ -1,0 +1,9 @@
+/.php-cs-fixer.php
+/.php-cs-fixer.cache
+/.phpunit.cache/
+/PAPERCUTS.md
+/composer.lock
+/drivers/
+/phpunit.xml
+/tests/Fixtures/*/var/
+/vendor/

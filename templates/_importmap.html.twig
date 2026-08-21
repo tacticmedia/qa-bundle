@@ -1,0 +1,7 @@
+{#
+    A file of its own because {% extends %} compiles the parent template whole. An
+    inline importmap() call in layout.html.twig is a parse error on a host that has no
+    AssetMapper, even when that host overrides {% block scripts %}. include() resolves
+    at render time, so an override never reaches this file.
+#}
+{{ importmap('app') }}

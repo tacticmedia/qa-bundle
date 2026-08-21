@@ -1,0 +1,15 @@
+#!/usr/bin/env php
+<?php
+
+declare(strict_types=1);
+
+use Symfony\Bundle\FrameworkBundle\Console\Application;
+use Symfony\Component\Console\Input\ArgvInput;
+use TacticMedia\QaBundle\Tests\Fixtures\app\TestKernel;
+
+require_once __DIR__.'/../../../../vendor/autoload.php';
+
+$input = new ArgvInput();
+$kernel = new TestKernel($input->getParameterOption(['--env', '-e'], $_SERVER['APP_ENV'] ?? 'test', true), true);
+
+exit(new Application($kernel)->run($input));

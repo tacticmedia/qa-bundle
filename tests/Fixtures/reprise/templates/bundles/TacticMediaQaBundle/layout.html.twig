@@ -1,0 +1,9 @@
+{#
+    The override the README tells a Symfony Reprise host to write. Keep the two identical:
+    if this file needs anything the documentation does not carry, the documentation is wrong.
+#}
+{% extends '@!TacticMediaQa/layout.html.twig' %}
+
+{% block scripts %}
+    {{ reprise_entry_script_tags('app') }}
+{% endblock %}

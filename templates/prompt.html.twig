@@ -1,0 +1,39 @@
+{% extends '@TacticMediaQa/layout.html.twig' %}
+
+{% import '@TacticMediaQa/_ui.html.twig' as ui %}
+
+{% block page_title %}Feedback prompt{% endblock %}
+
+{% block page_back %}
+    {{ ui.back(path('qa_screenshots_index'), 'Back to screenshots') }}
+{% endblock %}
+
+{% block page_subtitle %}
+    <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        {{ feedback_total }} note{{ feedback_total == 1 ? '' : 's' }} across the review. Hand this to an agent as-is.
+    </p>
+{% endblock %}
+
+{% block page_actions %}
+    {{ ui.button('Raw text', path('qa_screenshots_prompt_raw'), 'secondary') }}
+    <form method="post" action="{{ path('qa_screenshots_feedback_clear') }}"
+          {{ stimulus_controller('qa-confirm', {message: 'Discard every note in this review?'})|stimulus_action('qa-confirm', 'check', 'submit') }}>
+        <input type="hidden" name="_token" value="{{ csrf_token('screenshot-review') }}" {{ stimulus_controller('csrf-protection') }}>
+        {{ ui.button('Clear all', null, 'danger') }}
+    </form>
+{% endblock %}
+
+{% block review_content %}
+    {% if feedback_total == 0 %}
+        {{ ui.empty_state('Nothing to report yet', 'Open a screenshot, drag over what is wrong and write a note. The prompt builds itself from your notes.') }}
+    {% else %}
+        <div {{ stimulus_controller('qa-clipboard') }}>
+            <div class="mb-3 flex justify-end">
+                {{ ui.button('Copy prompt', null, 'secondary', stimulus_target('qa-clipboard', 'button')|stimulus_action('qa-clipboard', 'copy'), '', 'button') }}
+            </div>
+
+            <pre class="overflow-x-auto rounded-lg border border-gray-200 bg-white p-4 text-xs/5 whitespace-pre-wrap text-gray-900 dark:border-white/10 dark:bg-white/5 dark:text-slate-200"
+                 {{ stimulus_target('qa-clipboard', 'source') }}>{{ prompt }}</pre>
+        </div>
+    {% endif %}
+{% endblock %}

@@ -1,0 +1,47 @@
+{
+    "name": "@tacticmedia/qa-bundle",
+    "description": "Stimulus controllers for the screenshot review page.",
+    "license": "MIT",
+    "version": "1.0.0",
+    "type": "module",
+    "files": [
+        "dist"
+    ],
+    "main": "dist/annotate_controller.js",
+    "symfony": {
+        "controllers": {
+            "annotate": {
+                "main": "dist/annotate_controller.js",
+                "name": "qa-annotate",
+                "fetch": "eager",
+                "enabled": true
+            },
+            "clipboard": {
+                "main": "dist/clipboard_controller.js",
+                "name": "qa-clipboard",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "confirm": {
+                "main": "dist/confirm_controller.js",
+                "name": "qa-confirm",
+                "fetch": "lazy",
+                "enabled": true
+            },
+            "anchor-highlight": {
+                "main": "dist/anchor_highlight_controller.js",
+                "name": "qa-anchor-highlight",
+                "fetch": "lazy",
+                "enabled": true
+            }
+        },
+        "importmap": {
+            "@hotwired/stimulus": "^3.0.0",
+            "@hotwired/turbo": "^8.0.0"
+        }
+    },
+    "peerDependencies": {
+        "@hotwired/stimulus": "^3.0.0",
+        "@hotwired/turbo": "^8.0.0"
+    }
+}

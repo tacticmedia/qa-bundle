@@ -1,0 +1,84 @@
+{
+    "name": "tacticmedia/qa-bundle",
+    "description": "Full-page screenshot capture for Panther journeys, plus a dev review page that turns visual feedback into a brief for a coding agent.",
+    "license": "MIT",
+    "type": "symfony-bundle",
+    "keywords": [
+        "e2e",
+        "panther",
+        "qa",
+        "screenshots",
+        "symfony",
+        "symfony-ux"
+    ],
+    "require": {
+        "php": ">=8.2",
+        "ext-gd": "*",
+        "ext-json": "*",
+        "symfony/clock": "^6.4|^7.4|^8.1",
+        "symfony/config": "^6.4|^7.4|^8.1",
+        "symfony/dependency-injection": "^6.4|^7.4|^8.1",
+        "symfony/framework-bundle": "^6.4|^7.4|^8.1",
+        "symfony/http-foundation": "^6.4|^7.4|^8.1",
+        "symfony/http-kernel": "^6.4|^7.4|^8.1",
+        "symfony/panther": "^2.4",
+        "symfony/polyfill-php84": "^1.31",
+        "symfony/routing": "^6.4|^7.4|^8.1",
+        "symfony/security-csrf": "^6.4|^7.4|^8.1",
+        "symfony/stimulus-bundle": "^2.30|^3.4",
+        "symfony/twig-bundle": "^6.4|^7.4|^8.1",
+        "symfony/uid": "^6.4|^7.4|^8.1",
+        "twig/twig": "^3.28"
+    },
+    "require-dev": {
+        "dbrekelmans/bdi": "^1.4",
+        "friendsofphp/php-cs-fixer": "^3.95",
+        "phpstan/phpstan": "^2.2",
+        "phpstan/phpstan-phpunit": "^2.0",
+        "phpunit/phpunit": "^11.5|^12.5|^13.3",
+        "symfony/asset-mapper": "^6.4|^7.4|^8.1",
+        "symfony/browser-kit": "^6.4|^7.4|^8.1",
+        "symfony/css-selector": "^6.4|^7.4|^8.1",
+        "symfony/dom-crawler": "^6.4|^7.4|^8.1",
+        "symfony/runtime": "^6.4|^7.4|^8.1",
+        "symfony/webpack-encore-bundle": "^2.4"
+    },
+    "conflict": {
+        "symfony/asset-mapper": "<6.4"
+    },
+    "suggest": {
+        "symfony/asset-mapper": "To serve the bundle's Stimulus controllers without a JavaScript build step. A Webpack Encore or Symfony Reprise host takes them from node_modules instead."
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "autoload": {
+        "psr-4": {
+            "TacticMedia\\QaBundle\\": "src/"
+        }
+    },
+    "archive": {
+        "exclude": ["/tests", "/docs", "/demo", ".github"]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "TacticMedia\\QaBundle\\Tests\\": "tests/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true,
+            "symfony/runtime": true
+        },
+        "sort-packages": true
+    },
+    "scripts": {
+        "cs": "@php vendor/bin/php-cs-fixer fix",
+        "cs:check": "@php vendor/bin/php-cs-fixer check --diff",
+        "stan": "@php vendor/bin/phpstan analyse",
+        "test": "@php vendor/bin/phpunit --exclude-group e2e",
+        "test:e2e": [
+            "Composer\\Config::disableProcessTimeout",
+            "@php vendor/bin/phpunit --group e2e"
+        ]
+    }
+}

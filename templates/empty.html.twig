@@ -1,0 +1,12 @@
+{% extends '@TacticMediaQa/layout.html.twig' %}
+
+{% import '@TacticMediaQa/_ui.html.twig' as ui %}
+
+{% block page_title %}Screenshot review{% endblock %}
+
+{% block review_content %}
+    {{ ui.empty_state(
+        'No screenshots yet',
+        'Run the end-to-end journeys to capture them, then reload this page.',
+    ) }}
+{% endblock %}

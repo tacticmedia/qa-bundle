@@ -1,0 +1,50 @@
+{#
+    Markup the review pages share. Macros rather than components, so the bundle
+    needs no Twig component package and a host restyles by overriding this one
+    file.
+
+    button(): `label` is raw markup, so a caller passing data must escape it.
+    `extra` takes the stimulus_* helper output.
+    icon(): sun, moon, list, up, down, left, trash.
+#}
+{% macro button(label, href = null, kind = 'primary', extra = null, class = '', type = 'submit') %}
+    {% set kinds = {
+        primary: 'bg-amber-500 text-amber-950 hover:bg-amber-400',
+        secondary: 'bg-white text-gray-900 ring-1 ring-gray-300 ring-inset hover:bg-gray-50 dark:bg-white/10 dark:text-white dark:ring-white/15 dark:hover:bg-white/20',
+        danger: 'bg-red-600 text-white hover:bg-red-500',
+        ghost: 'text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-white/10',
+    } %}
+    {%- set shared = 'inline-flex items-center justify-center gap-1.5 rounded-md px-3 py-2 text-sm font-semibold whitespace-nowrap ' ~ (kinds[kind] ?? kinds.primary) ~ ' ' ~ class -%}
+    {% if href is not null %}
+        <a href="{{ href }}" class="{{ shared }}" {{ extra|raw }}>{{ label|raw }}</a>
+    {% else %}
+        <button type="{{ type }}" class="{{ shared }}" {{ extra|raw }}>{{ label|raw }}</button>
+    {% endif %}
+{% endmacro %}
+
+{% macro empty_state(header, text) %}
+    <div class="mt-6 rounded-lg border border-dashed border-gray-300 p-8 text-center dark:border-white/15">
+        <p class="text-sm font-semibold text-gray-900 dark:text-slate-200">{{ header }}</p>
+        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">{{ text }}</p>
+    </div>
+{% endmacro %}
+
+{% macro back(href, label) %}
+    <a href="{{ href }}" class="mb-2 inline-flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-gray-900 dark:text-gray-400 dark:hover:text-white">
+        {{- _self.icon('left', 'size-4') -}}
+        {{ label }}
+    </a>
+{% endmacro %}
+
+{% macro icon(name, class = 'size-5') %}
+    {%- set paths = {
+        sun: '<circle cx="12" cy="12" r="4"/><path d="M12 3v2m0 14v2M3 12h2m14 0h2M5.6 5.6l1.4 1.4m10 10 1.4 1.4m0-12.8-1.4 1.4m-10 10-1.4 1.4"/>',
+        moon: '<path d="M20 14.5A8.5 8.5 0 0 1 9.5 4a8.5 8.5 0 1 0 10.5 10.5Z"/>',
+        list: '<path d="M9 6h11M9 12h11M9 18h11M4 6h1m-1 6h1m-1 6h1"/>',
+        up: '<path d="m6 15 6-6 6 6"/>',
+        down: '<path d="m6 9 6 6 6-6"/>',
+        left: '<path d="m14 6-6 6 6 6"/>',
+        trash: '<path d="M4 7h16M10 11v6m4-6v6M6 7l1 12a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1l1-12M9 7V5a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2"/>',
+    } -%}
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" class="{{ class }}">{{- paths[name]|default('')|raw -}}</svg>
+{% endmacro %}

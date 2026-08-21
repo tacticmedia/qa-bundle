@@ -1,0 +1,10 @@
+{
+    "isProd": true,
+    "publicPath": "/build/",
+    "entryPoints": {
+        "app": {
+            "js": ["/build/app.js"],
+            "css": ["/build/app.css"]
+        }
+    }
+}
