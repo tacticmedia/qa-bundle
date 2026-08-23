@@ -6,6 +6,10 @@ which traverses https://tacticmedia.com.au and captures every screen it settles 
 page to look at the result. The application has no pages of its own; the only routes are the
 bundle's `/_dev/screenshots*`.
 
+`playwright/` carries the same journey written for Playwright, writing the same tree. Running either
+producer gives the same six screens in the review, which is what makes the layout in
+`docs/screenshot-sets.md` a contract rather than a description of the PHP trait.
+
 ## Requirements
 
 - PHP 8.4 or newer with `ext-gd`
@@ -39,6 +43,22 @@ each settled screen. Every capture lands in `var/screenshots/<mode>/<WxH>/<orien
 viewports in light and dark - the trait's defaults. The tree is emptied at the start of each run,
 so it always holds the latest run only.
 
+## Capture with Playwright instead
+
+```
+cd ../js && npm ci && npm run build
+cd ../demo/playwright && npm install && npx playwright install chromium
+npm run journey
+```
+
+`npm install` copies rather than symlinks the local `@tacticmedia/qa-capture` (`.npmrc` sets
+`install-links`), so rebuilding `js/` means running `npm install` here again. A symlinked package
+resolves `@playwright/test` from its own `node_modules` and Playwright refuses to load twice.
+
+The spec mirrors the PHP journey stage for stage, with the same six labels, and
+`playwright.config.ts` points `QA_SCREENSHOTS_DIR` at this application's `var/screenshots`. **The two
+producers alternate, they do not accumulate**: each empties the tree at the start of its run.
+
 ## Review
 
 ```
@@ -49,6 +69,19 @@ Open http://localhost:8000/_dev/screenshots. Browse the groups in the sidebar, o
 over what looks wrong and write a note, then use Generate prompt for the agent brief. Notes are
 stored in `var/review/screenshot-feedback.json`, outside the screenshot tree, so they survive a
 journey re-run.
+
+## Review via Docker
+
+```
+docker compose up --build review
+```
+
+Open http://localhost:8000/_dev/screenshots. `compose.yaml` mounts `var/screenshots` and
+`var/review` under `/data`, which is this project's root as the container sees it - that is what
+makes the generated brief print `var/screenshots/...` rather than a path inside the container. Drop
+`--build` once the published image is what you want.
+
+This is the path for a project with no PHP toolchain. Capture still runs on the host.
 
 ## Styling
 

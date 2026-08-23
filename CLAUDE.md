@@ -78,6 +78,39 @@ sync between the trait and the catalog.
 
 ## Conventions to keep
 
+- **The DOM metadata script has one source: `resources/capture/metadata.js`.** The PHP trait reads
+  it at runtime and the npm build copies it into `dist/capture/`; neither holds a copy. It must stay
+  an **expression** (no trailing semicolon) because both producers evaluate it for its value, and
+  `resources/` is deliberately not archive-excluded so the installed package carries it.
+- **The on-disk layout is public API, written down in `docs/screenshot-sets.md` plus
+  `docs/sidecar.schema.json`.** Two producers write it now. Changing a grammar or the meaning of a
+  required field breaks the other producer and every stored note. Adding an optional sidecar field,
+  a mode or a viewport does not.
+- **Three things move together when the sidecar shape changes:** `MetadataElement`/`ScreenMetadata`,
+  `docs/sidecar.schema.json`, and the ajv test in `js/tests/unit/sidecar.spec.ts`. The schema is not
+  documentation, it is a gate.
+- **`tests/Contract/ProducedTreeTest.php` is the proof the contract is one.** It runs the real
+  reader over a tree the npm package wrote, and skips itself without `QA_SCREENSHOTS_DIR`. If it
+  only ever skips, the contract is untested.
+- **Two npm packages, two jobs.** `assets/package.json` is `@tacticmedia/qa-bundle`, the Stimulus
+  controllers the review page loads. `js/package.json` is `@tacticmedia/qa-capture`, the Playwright
+  producer. Neither name is free for the other.
+- **One clearing producer per root per run.** Both producers empty the tree at run start and keep
+  the root. Running the PHP journey and then the Playwright one replaces the tree; they alternate,
+  they never accumulate.
+- **The review reports what it ignored.** `ScreenshotCatalog::ignored()`/`allIgnored()` feed a
+  footnote on the group and empty pages, and the annotate page warns about an unreadable sidecar. A
+  foreign producer's first mistake must never render as an empty page with no explanation.
+- **The prompt is producer-neutral.** No `captureFullPageScreenshot`, no test-framework vocabulary:
+  journey and scenario. A host that wants its own phrasing overrides `prompt.txt.twig`.
+- **`symfony/panther` is a suggestion, not a dependency.** Only the capture trait needs it, and
+  requiring it drags php-webdriver and `ext-zip` into the review-only container image.
+- **In the review image, `/data` is the reviewed project's root.** The brief prints project-relative
+  paths, so each tree is mounted at the path it has on the host and
+  `App\MountedProjectPathsPass` points the catalog and the cropper at `/data`. Absolute container
+  paths in a brief are worse than useless: the agent reading them runs on the host.
+- **`docker/review/composer.lock` is committed and drifts.** A change to the bundle's dependencies
+  means `composer update` in `docker/review/`. The `docker` CI job is the detector.
 - **The trait must stay container-free.** It is half the package's value that a project can use the
   capture without registering the bundle. Configuration comes from overridable `protected static`
   methods and one environment variable, never from bundle configuration.
@@ -147,6 +180,10 @@ lines byte for byte; keep them identical or the documentation is untested. `Repr
 itself where the package is absent - in CI that is every leg below PHP 8.4, and locally it always
 skips unless `symfony/reprise` is required.
 
+The `node` CI job builds the npm package, runs its unit specs, captures against the PHP fixture host
+and then runs `--group contract` over that same tree. The `docker` job builds the review image,
+smoke-tests the empty state and publishes to ghcr.io on push.
+
 CI runs PHPStan and the non-e2e group across PHP 8.2/Symfony 6.4, 8.3/7.4, 8.4/8.1 and 8.5/8.1,
 the e2e group on 8.2/6.4 and 8.5/8.1 only, and installs `symfony/reprise` on the two top legs
 only. A separate style job runs `composer validate --strict` and `composer cs:check` on 8.5.
@@ -168,6 +205,10 @@ Two browser-driving rules learned the hard way, both in `tests/E2e/ScreenshotRev
   issued directly.
 - Wait past the Turbo preview before taking an element handle. Turbo renders a cached preview and then
   the real response, so a handle taken on a URL match alone can be replaced mid-drag.
+
+`demo/playwright/` is the Playwright twin of the demo journey, consuming `js/` through a `file:`
+dependency with `install-links=true` - a symlinked copy would resolve a second `@playwright/test`
+and Playwright refuses to load twice. Rebuilding `js/` means `npm install` there again.
 
 `demo/` is a stock Symfony 8.1 application on AssetMapper, PHP 8.4, that requires the bundle through
 a path repository. Its `vendor/` and `var/` are git-ignored, so a fresh checkout runs `composer

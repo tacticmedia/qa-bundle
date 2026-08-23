@@ -22,3 +22,9 @@
 ###> dbrekelmans/bdi ###
 /drivers/
 ###< dbrekelmans/bdi ###
+
+###> playwright ###
+/playwright/node_modules/
+/playwright/test-results/
+/playwright/playwright-report/
+###< playwright ###

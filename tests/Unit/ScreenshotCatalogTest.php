@@ -8,6 +8,7 @@ use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\Attributes\TestDox;
 use PHPUnit\Framework\TestCase;
 use TacticMedia\QaBundle\Review\CapturedScreen;
+use TacticMedia\QaBundle\Review\IgnoredReason;
 use TacticMedia\QaBundle\Review\ScreenshotCatalog;
 use TacticMedia\QaBundle\Review\ScreenshotGroup;
 
@@ -235,6 +236,77 @@ final class ScreenshotCatalogTest extends TestCase
         self::assertNull($catalog->metadata('light', '1920x1080', 'AJourneyE2eTest-testA-002_Two'));
     }
 
+    #[TestDox('A well-formed pair is read, so nothing about it is reported as ignored')]
+    public function testAReadableCaptureIsNotReportedAsIgnored(): void
+    {
+        $this->writePair('light', '1920x1080', 'landscape', 'AJourneyE2eTest-testA-001_Home');
+
+        self::assertTrue($this->catalog()->allIgnored()->isEmpty());
+    }
+
+    #[TestDox('Each way a file can miss the contract is reported with its own reason')]
+    public function testEveryIgnoredReasonIsReported(): void
+    {
+        $this->writePair('light', '1920x1080', 'landscape', 'AJourneyE2eTest-testA-001_Home');
+        $this->write('light', '1920x1080', 'landscape', 'shot-2.png');
+        $this->write('light', '1920x1080', 'landscape', 'AJourneyE2eTest-testA-002_Detail.png');
+        $this->write('light', '1920x1080', 'landscape', 'AJourneyE2eTest-testA-003_Orphan.json');
+        mkdir($this->root.'/light_mode', 0o777, true);
+        mkdir($this->root.'/light/wide', 0o777, true);
+        mkdir($this->root.'/light/1920x1080/sideways', 0o777, true);
+
+        $ignored = $this->catalog()->allIgnored();
+
+        $reasons = [];
+
+        foreach ($ignored->entries as $entry) {
+            $reasons[$entry->path] = $entry->reason;
+        }
+
+        self::assertSame(IgnoredReason::UnparsableName, $reasons['light/1920x1080/landscape/shot-2.png']);
+        self::assertSame(IgnoredReason::MissingSidecar, $reasons['light/1920x1080/landscape/AJourneyE2eTest-testA-002_Detail.png']);
+        self::assertSame(IgnoredReason::OrphanSidecar, $reasons['light/1920x1080/landscape/AJourneyE2eTest-testA-003_Orphan.json']);
+        self::assertSame(IgnoredReason::UnrecognizedDirectory, $reasons['light_mode']);
+        self::assertSame(IgnoredReason::UnrecognizedDirectory, $reasons['light/wide']);
+        self::assertSame(IgnoredReason::UnrecognizedDirectory, $reasons['light/1920x1080/sideways']);
+        self::assertSame(6, $ignored->total);
+    }
+
+    #[TestDox('A hidden file is not a capture, so it is not reported')]
+    public function testHiddenFilesAreNotReported(): void
+    {
+        $this->writePair('light', '1920x1080', 'landscape', 'AJourneyE2eTest-testA-001_Home');
+        file_put_contents($this->root.'/light/1920x1080/landscape/.DS_Store', 'junk');
+
+        self::assertTrue($this->catalog()->allIgnored()->isEmpty());
+    }
+
+    #[TestDox('The group view reports only what its own directory holds')]
+    public function testIgnoredIsScopedToOneGroup(): void
+    {
+        $this->write('light', '1920x1080', 'landscape', 'wrong.png');
+        $this->write('dark', '1920x1080', 'landscape', 'alsowrong.png');
+
+        $ignored = $this->catalog()->ignored('light', '1920x1080');
+
+        self::assertSame(1, $ignored->total);
+        self::assertSame('light/1920x1080/landscape/wrong.png', $ignored->entries[0]->path);
+    }
+
+    #[TestDox('The list is capped, and the count of what it does not show stays true')]
+    public function testTheListIsCapped(): void
+    {
+        for ($i = 0; $i < 25; ++$i) {
+            $this->write('light', '1920x1080', 'landscape', \sprintf('wrong-%02d.png', $i));
+        }
+
+        $ignored = $this->catalog()->allIgnored();
+
+        self::assertCount(20, $ignored->entries);
+        self::assertSame(25, $ignored->total);
+        self::assertSame(5, $ignored->hidden());
+    }
+
     private function catalog(): ScreenshotCatalog
     {
         return new ScreenshotCatalog($this->root);
@@ -248,7 +320,13 @@ final class ScreenshotCatalogTest extends TestCase
             mkdir($directory, 0o777, true);
         }
 
-        file_put_contents($directory.'/'.$name.'.png', 'png');
+        file_put_contents($directory.'/'.(str_contains($name, '.') ? $name : $name.'.png'), 'png');
+    }
+
+    private function writePair(string $mode, string $viewport, string $orientation, string $name): void
+    {
+        $this->write($mode, $viewport, $orientation, $name);
+        $this->writeMetadata($mode, $viewport, $orientation, $name, '{}');
     }
 
     private function writeMetadata(string $mode, string $viewport, string $orientation, string $name, string $json): void

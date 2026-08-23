@@ -5,10 +5,10 @@ rendering errors. Fix what they reported.
 Read this repository's own conventions before changing anything - the coding
 standards it documents outrank anything you would otherwise reach for.
 
-How to find the code behind a screenshot: every image was captured by a
-captureFullPageScreenshot($client, '<label>') call inside the test method named
-below. Search the test file for that label to see exactly where in the journey the
-screen was reached, then follow the controller and template it renders.
+How to find the code behind a screenshot: every image was captured by a screenshot
+call carrying the label shown below, made from the scenario named below. Search the
+journey file for that label to see exactly where in the journey the screen was
+reached, then follow the code that renders it.
 
 How to read a note: "Area" is the region the reviewer dragged, in natural image
 pixels of a full-page capture - x from the left edge of the page, y from the very
@@ -17,28 +17,28 @@ the screen as a whole. Read the cropped view first, where the selection is outli
 in red, and open the full screenshot only for the surrounding context.
 
 How to locate a selection in the code: "Page" is the URL the journey was on when it
-took the capture. Open it to see the screen live, and read its path for the route,
-which names the controller and the template. Then grep for the element text, for the
-distinctive class strings, and for the structure the selector describes.
+took the capture. Open it to see the screen live, and read its path to find the code
+that serves it. Then grep for the element text, for the distinctive class strings,
+and for the structure the selector describes.
 
-That URL is the end-to-end application, whose database the journeys seed and reset.
-The same route on your development application holds different records, so a URL
-naming a specific id may 404 there.
+That URL is the application under test, whose data the journeys control. The same
+route on your development application holds different records, so a URL naming a
+specific id may 404 there.
 
 {% for class, screens in entries %}
 ================================================================================
-TEST CASE: {{ class }}
+JOURNEY:  {{ class }}
 {% for name, rows in screens %}
 {% set screen = rows|first.screen %}
 {% set origin = rows|first.metadata %}
 {% if screen %}
 {% if origin and origin.testFile %}
-FILE:   {{ origin.testFile }}
+FILE:     {{ origin.testFile }}
 {% endif %}
-METHOD: {{ screen.method }}
-SCREEN: "{{ screen.label }}" (capture #{{ screen.sequence }} in the journey)
+SCENARIO: {{ screen.method }}
+SCREEN:   "{{ screen.label }}" (capture #{{ screen.sequence }} in the journey)
 {% else %}
-SCREEN: {{ name }} (filename could not be parsed)
+SCREEN:   {{ name }} (filename could not be parsed)
 {% endif %}
 {% for row in rows %}
 
@@ -82,7 +82,7 @@ SCREEN: {{ name }} (filename could not be parsed)
 {% endif %}
 {% if row.stale %}
     Note: this file is missing from the current run, so it came from an earlier one.
-          The test, method and screen above still identify what was reviewed.
+          The journey, scenario and screen above still identify what was reviewed.
 {% endif %}
     Feedback: {{ row.item.note }}
 {% endfor %}
@@ -95,7 +95,7 @@ Instructions:
 
 1. Reproduce each issue by looking at the named screenshot before you change code.
 2. Fix it in the template, component or stylesheet that renders the screen, not by
-   patching the test.
+   patching the journey.
 3. Keep light and dark parity: a fix verified in one mode must be checked in the
    other, and the same screen exists at every captured viewport.
 4. Follow this repository's conventions for markup, styling, wording and client-side

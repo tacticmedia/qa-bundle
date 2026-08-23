@@ -1,5 +1,7 @@
 {% extends '@TacticMediaQa/layout.html.twig' %}
 
+{% import '@TacticMediaQa/_ui.html.twig' as ui %}
+
 {% block page_title %}{{ mode|capitalize }} · {{ viewport|replace({'x': '×'}) }}{% endblock %}
 
 {% block page_subtitle %}
@@ -46,4 +48,6 @@
         </section>
     {% endfor %}
     </div>
+
+    {{ ui.ignored_list(ignored) }}
 {% endblock %}

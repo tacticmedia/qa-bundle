@@ -59,6 +59,72 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'No screenshots yet');
     }
 
+    #[TestDox('An empty page names the files it could not read, so a foreign producer sees why')]
+    public function testTheEmptyStateReportsWhatItIgnored(): void
+    {
+        $this->removeFixtureTree();
+
+        $directory = $this->fixtureScreenshotRoot().'/light/1920x1080/landscape';
+        mkdir($directory, 0o777, true);
+        file_put_contents($directory.'/screenshot 1.png', 'png');
+
+        $client = self::createClient();
+        $client->request('GET', '/_dev/screenshots');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', '1 entry was ignored');
+        self::assertSelectorTextContains('body', 'light/1920x1080/landscape/screenshot 1.png');
+        self::assertSelectorTextContains('body', 'name does not match the capture grammar');
+    }
+
+    #[TestDox('A group page names the files in its own directory that the reader skipped')]
+    public function testTheGroupPageReportsWhatItIgnored(): void
+    {
+        file_put_contents(
+            \sprintf('%s/light/1920x1080/landscape/%s', $this->fixtureScreenshotRoot(), 'FixtureJourneyE2eTest-testJourney-009_Stray.json'),
+            '{}',
+        );
+
+        $client = self::createClient();
+        $client->request('GET', '/_dev/screenshots/light/1920x1080');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', '1 entry was ignored');
+        self::assertSelectorTextContains('body', 'sidecar with no capture beside it');
+    }
+
+    #[TestDox('A long ignored list is capped, and the page says how much it is not showing')]
+    public function testTheIgnoredListIsCappedOnThePage(): void
+    {
+        $directory = $this->fixtureScreenshotRoot().'/light/1920x1080/landscape';
+
+        for ($i = 0; $i < 25; ++$i) {
+            file_put_contents(\sprintf('%s/wrong %02d.png', $directory, $i), 'png');
+        }
+
+        $client = self::createClient();
+        $client->request('GET', '/_dev/screenshots/light/1920x1080');
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', '25 entries were ignored');
+        self::assertSelectorTextContains('body', 'and 5 more');
+    }
+
+    #[TestDox('An unreadable sidecar is called out on the page where it would have resolved elements')]
+    public function testTheAnnotatePageWarnsAboutAnUnreadableSidecar(): void
+    {
+        file_put_contents(
+            \sprintf('%s/light/1920x1080/landscape/%s.json', $this->fixtureScreenshotRoot(), self::SCREEN),
+            'not json',
+        );
+
+        $client = self::createClient();
+        $client->request('GET', '/_dev/screenshots/light/1920x1080/'.self::SCREEN);
+
+        self::assertResponseIsSuccessful();
+        self::assertSelectorTextContains('body', 'no readable sidecar');
+    }
+
     #[TestDox('The group grid lists every capture, sectioned by test class')]
     public function testTheGroupGridListsTheCaptures(): void
     {
@@ -287,9 +353,9 @@ final class ScreenshotReviewControllerTest extends WebTestCase
 
         self::assertResponseIsSuccessful();
         self::assertResponseHeaderSame('Content-Type', 'text/plain; charset=UTF-8');
-        self::assertStringContainsString('TEST CASE: FixtureJourneyE2eTest', $prompt);
-        self::assertStringContainsString('FILE:   tests/E2e/FixtureJourneyE2eTest.php', $prompt);
-        self::assertStringContainsString('METHOD: testJourney', $prompt);
+        self::assertStringContainsString('JOURNEY:  FixtureJourneyE2eTest', $prompt);
+        self::assertStringContainsString('FILE:     tests/E2e/FixtureJourneyE2eTest.php', $prompt);
+        self::assertStringContainsString('SCENARIO: testJourney', $prompt);
         self::assertStringContainsString('Screenshot: var/screenshots/light/1920x1080/landscape/'.self::SCREEN.'.png', $prompt);
         self::assertStringContainsString('Page: '.self::PAGE_URL.' ("'.self::PAGE_TITLE.'")', $prompt);
         self::assertStringContainsString('selector: '.self::FIXTURE_SELECTOR, $prompt);

@@ -5,12 +5,18 @@ human's visual feedback into a brief for a coding agent.
 
 Two halves, usable independently:
 
-- `TacticMedia\QaBundle\Test\JourneyScreenshots` - a PHPUnit trait. `captureFullPageScreenshot()`
-  shoots the settled screen at every configured viewport and colour scheme, and writes a `.json`
-  sidecar of element geometry beside each PNG. No container, no bundle needed.
-- `/_dev/screenshots` - the review page. Browse the captures, drag a rectangle over what is wrong,
-  write a note, and generate a plain-text prompt that names the test, the method, the screen, the
-  page URL, the elements under the selection and a cropped image of it.
+- **Capture.** `TacticMedia\QaBundle\Test\JourneyScreenshots` - a PHPUnit trait.
+  `captureFullPageScreenshot()` shoots the settled screen at every configured viewport and colour
+  scheme, and writes a `.json` sidecar of element geometry beside each PNG. No container, no bundle
+  needed. [`@tacticmedia/qa-capture`](js/) does the same from Playwright, for projects with no PHP.
+- **Review.** `/_dev/screenshots` - the review page. Browse the captures, drag a rectangle over what
+  is wrong, write a note, and generate a plain-text prompt that names the journey, the scenario, the
+  screen, the page URL, the elements under the selection and a cropped image of it. It runs in this
+  application, or as a container over any project's tree.
+
+The two halves share nothing but a directory layout, written down in
+[docs/screenshot-sets.md](docs/screenshot-sets.md). Any tool that writes that layout can be
+reviewed.
 
 Requires PHP 8.2+, `ext-gd`, and Symfony 6.4, 7.4 or 8.1 - the branches Symfony still supports. A
 6.4 or 7.4 application can shoot a baseline before an upgrade and the same screens after it.
@@ -18,8 +24,11 @@ Requires PHP 8.2+, `ext-gd`, and Symfony 6.4, 7.4 or 8.1 - the branches Symfony 
 ## Install
 
 ```
-composer require --dev tacticmedia/qa-bundle
+composer require --dev tacticmedia/qa-bundle symfony/panther
 ```
+
+`symfony/panther` is only needed for the capture trait, so it is a suggestion here rather than a
+dependency - a project that only wants the review page leaves it out.
 
 Enable it for `dev` only, in `config/bundles.php`:
 
@@ -243,11 +252,74 @@ Both axes wrap. Coordinates are stored in natural image pixels, so a note keeps 
 width the page renders the screenshot at - and `y` is measured from the top of the page, not the top
 of the viewport.
 
+## Using it without PHP
+
+The review page reads a directory tree and nothing else, so neither half needs a PHP toolchain on
+the host.
+
+Capture from Playwright:
+
+```
+npm i -D @tacticmedia/qa-capture @playwright/test
+```
+
+```ts
+// playwright.config.ts
+import { createRequire } from 'node:module';
+
+export default defineConfig({
+    globalSetup: createRequire(import.meta.url).resolve('@tacticmedia/qa-capture/playwright/global-setup'),
+});
+```
+
+```ts
+// tests/home.spec.ts
+import { test } from '@tacticmedia/qa-capture/playwright';
+
+test('a visitor reads the company site', async ({ page, qaScreenshots }) => {
+    await page.goto('https://tacticmedia.com.au/');
+    await qaScreenshots.capture('Home');
+});
+```
+
+The global setup empties the tree once before any worker starts; the fixture shoots every viewport
+and colour scheme. Defaults and overrides (`qaScreenshotsOptions`) are in [js/README.md](js/README.md).
+
+Review in a container:
+
+```yaml
+# compose.yaml
+services:
+  review:
+    image: ghcr.io/tacticmedia/qa-review:latest
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./var/screenshots:/data/var/screenshots
+      - ./var/review:/data/var/review
+```
+
+```
+docker compose up review
+open http://localhost:8000/_dev/screenshots
+```
+
+**`/data` is your project root as the container sees it.** Mount each tree at the path it has on the
+host, so the generated brief names paths you can open. `QA_SCREENSHOTS_DIR`, `QA_REVIEW_DIR` and
+`QA_PROJECT_ROOT` override the defaults at runtime. The page has no authentication, which is why the
+port is bound to `127.0.0.1`; on Linux the container writes as uid 1000, so add
+`user: "${UID:-1000}:${GID:-1000}"` to own the notes yourself. Details in
+[docker/review/README.md](docker/review/README.md).
+
+Capture never runs in the container: browsers live on the host, and Playwright manages its own.
+
 ## Demo
 
 `demo/` is a runnable end-to-end example: a stock Symfony 8.1 application whose single Panther
 journey traverses https://tacticmedia.com.au, captures every screen at five viewports in light and
-dark, and serves the review page over the captured tree. `demo/README.md` walks through it.
+dark, and serves the review page over the captured tree. `demo/playwright/` is the same journey
+written for Playwright, writing the same tree, so you can switch producers and see an identical
+review. `demo/README.md` walks through both, and through reading the tree from the container.
 
 ## Development
 
@@ -271,7 +343,21 @@ composer update
 ```
 
 The E2E group drives a real Chrome against `tests/Fixtures/app`, served by the PHP built-in web
-server. No Docker.
+server.
+
+The capture package and the review image have their own gates:
+
+```
+cd js && npm ci && npm run build && npm test
+QA_SCREENSHOTS_DIR=/tmp/shots npm run test:integration
+QA_SCREENSHOTS_DIR=/tmp/shots vendor/bin/phpunit --group contract
+
+docker build -f docker/review/Dockerfile -t qa-review:local .
+```
+
+The `contract` group is the one that matters most: it runs the real reader over a tree no PHP wrote,
+which is what keeps the layout a contract rather than one implementation's habit. It skips itself
+without `QA_SCREENSHOTS_DIR`.
 
 ## License
 

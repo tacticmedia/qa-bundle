@@ -1,0 +1,76 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://tacticmedia.com.au/schemas/qa-bundle/sidecar.schema.json",
+    "title": "Screenshot sidecar",
+    "description": "Metadata written beside a capture, sharing its basename. See docs/screenshot-sets.md.",
+    "type": "object",
+    "required": ["url", "title", "pageWidth", "pageHeight"],
+    "additionalProperties": true,
+    "properties": {
+        "url": {
+            "type": "string",
+            "description": "The URL the page was on at capture time."
+        },
+        "title": {
+            "type": "string",
+            "description": "document.title at capture time."
+        },
+        "pageWidth": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Width of the PNG in pixels, which is also CSS pixels at deviceScaleFactor 1."
+        },
+        "pageHeight": {
+            "type": "integer",
+            "minimum": 1,
+            "description": "Height of the PNG in pixels, which is also CSS pixels at deviceScaleFactor 1."
+        },
+        "elements": {
+            "type": "array",
+            "description": "Element boxes and identities, in document-absolute CSS pixels.",
+            "items": {"$ref": "#/$defs/element"}
+        },
+        "testClass": {
+            "type": ["string", "null"],
+            "description": "Producer-side identifier of the journey."
+        },
+        "testFile": {
+            "type": ["string", "null"],
+            "description": "Source file that produced the capture, project-relative when possible."
+        }
+    },
+    "$defs": {
+        "element": {
+            "type": "object",
+            "required": ["selector", "tag", "x", "y", "width", "height"],
+            "additionalProperties": true,
+            "properties": {
+                "selector": {
+                    "type": "string",
+                    "description": "CSS selector resolving to this element on the captured page."
+                },
+                "tag": {
+                    "type": "string",
+                    "description": "Lowercase local name."
+                },
+                "x": {"type": "number", "description": "Document-absolute left edge, scroll offset included."},
+                "y": {"type": "number", "description": "Document-absolute top edge, scroll offset included."},
+                "width": {"type": "number", "minimum": 0},
+                "height": {"type": "number", "minimum": 0},
+                "text": {
+                    "type": ["string", "null"],
+                    "description": "Visible text, collapsed and capped."
+                },
+                "classes": {
+                    "type": ["string", "null"],
+                    "description": "The class attribute verbatim, capped."
+                },
+                "attributes": {
+                    "type": "object",
+                    "description": "Identifying attributes, values capped.",
+                    "additionalProperties": {"type": "string"}
+                }
+            }
+        }
+    }
+}

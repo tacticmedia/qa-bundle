@@ -1,0 +1,13 @@
+# Defence in depth behind the Dockerfile's explicit COPY list.
+*
+!composer.json
+!src/
+!config/
+!assets/
+!templates/
+!resources/
+!docker/review/
+docker/review/vendor/
+docker/review/var/
+docker/review/public/assets/
+docker/review/assets/vendor/

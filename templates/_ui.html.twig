@@ -6,6 +6,7 @@
     button(): `label` is raw markup, so a caller passing data must escape it.
     `extra` takes the stimulus_* helper output.
     icon(): sun, moon, list, up, down, left, trash.
+    ignored_list(): the reader emits reason tokens; the wording lives here.
 #}
 {% macro button(label, href = null, kind = 'primary', extra = null, class = '', type = 'submit') %}
     {% set kinds = {
@@ -34,6 +35,37 @@
         {{- _self.icon('left', 'size-4') -}}
         {{ label }}
     </a>
+{% endmacro %}
+
+{% macro ignored_list(ignored) %}
+    {% if not ignored.isEmpty %}
+        {% set reasons = {
+            unparsable_name: 'name does not match the capture grammar',
+            missing_sidecar: 'no .json sidecar beside it',
+            orphan_sidecar: 'sidecar with no capture beside it',
+            unrecognized_directory: 'not a mode, viewport or orientation directory',
+        } %}
+        <details class="mt-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm dark:border-amber-400/30 dark:bg-amber-400/10">
+            <summary class="cursor-pointer font-semibold text-amber-900 dark:text-amber-200">
+                {{ ignored.total }} {{ ignored.total == 1 ? 'entry was' : 'entries were' }} ignored
+            </summary>
+            <p class="mt-2 text-amber-900/80 dark:text-amber-200/80">
+                These do not match the screenshot set contract, so the review cannot read them.
+                The grammars are in docs/screenshot-sets.md.
+            </p>
+            <ul class="mt-3 space-y-1 text-amber-900/80 dark:text-amber-200/80">
+                {% for entry in ignored.entries %}
+                    <li>
+                        <code class="font-mono text-xs">{{ entry.path }}</code>
+                        <span class="text-amber-900/60 dark:text-amber-200/60">- {{ reasons[entry.reason.value] ?? entry.reason.value }}</span>
+                    </li>
+                {% endfor %}
+            </ul>
+            {% if ignored.hidden %}
+                <p class="mt-2 text-amber-900/60 dark:text-amber-200/60">and {{ ignored.hidden }} more</p>
+            {% endif %}
+        </details>
+    {% endif %}
 {% endmacro %}
 
 {% macro icon(name, class = 'size-5') %}

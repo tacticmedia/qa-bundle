@@ -1,0 +1,43 @@
+{
+    "name": "tacticmedia/qa-review-host",
+    "description": "Minimal Symfony application that serves the qa-bundle screenshot review page.",
+    "type": "project",
+    "license": "MIT",
+    "require": {
+        "php": ">=8.4",
+        "symfony/asset-mapper": "8.1.*",
+        "symfony/console": "8.1.*",
+        "symfony/framework-bundle": "8.1.*",
+        "symfony/runtime": "8.1.*",
+        "symfony/stimulus-bundle": "^2.30|^3.4",
+        "symfony/twig-bundle": "8.1.*",
+        "tacticmedia/qa-bundle": "dev-main"
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../..",
+            "options": {
+                "versions": {
+                    "tacticmedia/qa-bundle": "dev-main"
+                }
+            }
+        }
+    ],
+    "autoload": {
+        "psr-4": {
+            "App\\": "src/"
+        }
+    },
+    "config": {
+        "allow-plugins": {
+            "symfony/runtime": true
+        },
+        "platform": {
+            "php": "8.4.1"
+        },
+        "sort-packages": true
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

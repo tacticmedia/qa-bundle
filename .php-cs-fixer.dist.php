@@ -9,6 +9,8 @@ $finder = (new PhpCsFixer\Finder())
     ->exclude('vendor')
     ->exclude('demo')
     ->exclude(['tests/Fixtures/app/var', 'tests/Fixtures/encore/var', 'tests/Fixtures/reprise/var'])
+    // The review host's own PHP is linted; what Composer, AssetMapper and the kernel generate is not.
+    ->exclude(['docker/review/var', 'docker/review/vendor', 'docker/review/assets/vendor', 'docker/review/public/assets'])
 ;
 
 return (new PhpCsFixer\Config())

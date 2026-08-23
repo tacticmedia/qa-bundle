@@ -79,4 +79,15 @@ final class JourneyScreenshotsTest extends TestCase
     {
         self::assertSame(['light', 'dark'], self::screenshotColorSchemes());
     }
+
+    #[TestDox('The shared metadata script ships with the package and stays an expression')]
+    public function testTheMetadataScriptIsAnExpression(): void
+    {
+        self::assertFileExists(\dirname(__DIR__, 2).'/resources/capture/metadata.js');
+
+        $script = self::metadataScript();
+
+        self::assertStringStartsWith('(() => {', $script);
+        self::assertStringEndsWith('})()', $script);
+    }
 }

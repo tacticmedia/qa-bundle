@@ -1,4 +1,7 @@
+/.dockerignore export-ignore
 /.github export-ignore
 /demo export-ignore
+/docker export-ignore
 /docs export-ignore
+/js export-ignore
 /tests export-ignore

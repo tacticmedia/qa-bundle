@@ -21,7 +21,6 @@
         "symfony/framework-bundle": "^6.4|^7.4|^8.1",
         "symfony/http-foundation": "^6.4|^7.4|^8.1",
         "symfony/http-kernel": "^6.4|^7.4|^8.1",
-        "symfony/panther": "^2.4",
         "symfony/polyfill-php84": "^1.31",
         "symfony/routing": "^6.4|^7.4|^8.1",
         "symfony/security-csrf": "^6.4|^7.4|^8.1",
@@ -40,6 +39,7 @@
         "symfony/browser-kit": "^6.4|^7.4|^8.1",
         "symfony/css-selector": "^6.4|^7.4|^8.1",
         "symfony/dom-crawler": "^6.4|^7.4|^8.1",
+        "symfony/panther": "^2.4",
         "symfony/runtime": "^6.4|^7.4|^8.1",
         "symfony/webpack-encore-bundle": "^2.4"
     },
@@ -47,7 +47,8 @@
         "symfony/asset-mapper": "<6.4"
     },
     "suggest": {
-        "symfony/asset-mapper": "To serve the bundle's Stimulus controllers without a JavaScript build step. A Webpack Encore or Symfony Reprise host takes them from node_modules instead."
+        "symfony/asset-mapper": "To serve the bundle's Stimulus controllers without a JavaScript build step. A Webpack Encore or Symfony Reprise host takes them from node_modules instead.",
+        "symfony/panther": "Needed by the JourneyScreenshots capture trait; the review page does not use it."
     },
     "minimum-stability": "stable",
     "prefer-stable": true,
@@ -57,7 +58,15 @@
         }
     },
     "archive": {
-        "exclude": ["/tests", "/docs", "/demo", ".github"]
+        "exclude": [
+            ".github",
+            "/.dockerignore",
+            "/demo",
+            "/docker",
+            "/docs",
+            "/js",
+            "/tests"
+        ]
     },
     "autoload-dev": {
         "psr-4": {

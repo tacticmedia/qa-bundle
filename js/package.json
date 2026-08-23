@@ -1,0 +1,43 @@
+{
+    "name": "@tacticmedia/qa-capture",
+    "version": "0.1.0",
+    "description": "Capture screenshot sets for the tacticmedia/qa-bundle review page from Playwright.",
+    "license": "MIT",
+    "type": "module",
+    "engines": {
+        "node": ">=20"
+    },
+    "files": [
+        "dist"
+    ],
+    "exports": {
+        "./playwright": {
+            "types": "./dist/playwright/index.d.ts",
+            "default": "./dist/playwright/index.js"
+        },
+        "./playwright/global-setup": {
+            "types": "./dist/playwright/global-setup.d.ts",
+            "default": "./dist/playwright/global-setup.js"
+        }
+    },
+    "scripts": {
+        "build": "tsc && node scripts/copy-metadata.mjs",
+        "test": "playwright test --config playwright.config.ts",
+        "test:integration": "playwright test --config playwright.integration.config.ts"
+    },
+    "peerDependencies": {
+        "@playwright/test": ">=1.40"
+    },
+    "devDependencies": {
+        "@playwright/test": "^1.62.1",
+        "@types/node": "^26.2.0",
+        "ajv": "^8.20.0",
+        "typescript": "^7.0.2"
+    },
+    "keywords": [
+        "playwright",
+        "screenshots",
+        "qa",
+        "visual-review"
+    ]
+}

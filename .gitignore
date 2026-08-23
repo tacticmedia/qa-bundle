@@ -1,9 +1,13 @@
-/.php-cs-fixer.php
 /.php-cs-fixer.cache
+/.php-cs-fixer.php
 /.phpunit.cache/
 /PAPERCUTS.md
 /composer.lock
 /drivers/
+/js/dist/
+/js/node_modules/
+/js/playwright-report/
+/js/test-results/
 /phpunit.xml
 /tests/Fixtures/*/var/
 /vendor/

@@ -7,6 +7,8 @@
 {% block review_content %}
     {{ ui.empty_state(
         'No screenshots yet',
-        'Run the end-to-end journeys to capture them, then reload this page.',
+        'Run the journeys to capture screenshots, then reload this page.',
     ) }}
+
+    {{ ui.ignored_list(ignored) }}
 {% endblock %}

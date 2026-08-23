@@ -71,7 +71,9 @@ final class ScreenshotReviewController extends AbstractController
         $groups = $this->catalog->groups();
 
         if ([] === $groups) {
-            return $this->renderPage('@TacticMediaQa/empty.html.twig');
+            return $this->renderPage('@TacticMediaQa/empty.html.twig', [
+                'ignored' => $this->catalog->allIgnored(),
+            ]);
         }
 
         return $this->redirectToRoute(self::ROUTE_GROUP, [
@@ -222,6 +224,7 @@ final class ScreenshotReviewController extends AbstractController
             'viewport' => $viewport,
             'screens_by_class' => $byClass,
             'counts_by_screen' => $this->feedback->countsByScreen($mode, $viewport),
+            'ignored' => $this->catalog->ignored($mode, $viewport),
         ]);
     }
 
@@ -254,6 +257,7 @@ final class ScreenshotReviewController extends AbstractController
             'screen' => $screen,
             'notes' => $this->feedback->forScreenshot($mode, $viewport, $screen->name),
             'navigation' => $this->catalog->navigation($mode, $viewport, $screen->name),
+            'metadata_missing' => !$this->catalog->metadata($mode, $viewport, $screen->name) instanceof ScreenMetadata,
             ...$context,
         ], $status);
     }

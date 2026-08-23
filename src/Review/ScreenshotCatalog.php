@@ -21,6 +21,9 @@ final readonly class ScreenshotCatalog
     private const ORIENTATIONS = ['portrait', 'landscape'];
     private const BASENAME = '/^(?<class>\w+)-(?<method>\w+)-(?<sequence>\d{3})_(?<label>[A-Za-z0-9 _-]+)$/';
 
+    /** Enough to show the shape of the problem without turning the page into a log. */
+    private const IGNORED_CAP = 20;
+
     public function __construct(
         private string $root,
         private ?string $projectDirectory = null,
@@ -72,6 +75,24 @@ final readonly class ScreenshotCatalog
         );
 
         return $screens;
+    }
+
+    /**
+     * What the reader passed over inside one group.
+     */
+    public function ignored(string $mode, string $viewport): IgnoredCaptures
+    {
+        return $this->collect($mode, $viewport);
+    }
+
+    /**
+     * What the reader passed over anywhere under the root. This is what an empty
+     * page has to show: a producer whose output does not match the contract
+     * otherwise gets no groups and no explanation.
+     */
+    public function allIgnored(): IgnoredCaptures
+    {
+        return $this->collect(null, null);
     }
 
     public function find(string $mode, string $viewport, string $name): ?CapturedScreen
@@ -167,6 +188,120 @@ final readonly class ScreenshotCatalog
             $below,
             $this->find($below->mode, $below->viewport, $name),
         );
+    }
+
+    /**
+     * Walks the same three levels {@see discover()} does, keeping what that one
+     * drops. Hidden files are never captures, so they are not reported.
+     */
+    private function collect(?string $onlyMode, ?string $onlyViewport): IgnoredCaptures
+    {
+        $found = [];
+
+        foreach (glob($this->root.'/*', \GLOB_ONLYDIR) ?: [] as $modePath) {
+            $mode = basename($modePath);
+
+            if (1 !== preg_match(self::MODE, $mode)) {
+                if (null === $onlyMode) {
+                    $found[] = new IgnoredCapture($this->relative($modePath), IgnoredReason::UnrecognizedDirectory);
+                }
+
+                continue;
+            }
+
+            if (null !== $onlyMode && $mode !== $onlyMode) {
+                continue;
+            }
+
+            foreach (glob($modePath.'/*', \GLOB_ONLYDIR) ?: [] as $viewportPath) {
+                $viewport = basename($viewportPath);
+
+                if (1 !== preg_match(self::VIEWPORT, $viewport)) {
+                    if (null === $onlyViewport) {
+                        $found[] = new IgnoredCapture($this->relative($viewportPath), IgnoredReason::UnrecognizedDirectory);
+                    }
+
+                    continue;
+                }
+
+                if (null !== $onlyViewport && $viewport !== $onlyViewport) {
+                    continue;
+                }
+
+                foreach (glob($viewportPath.'/*', \GLOB_ONLYDIR) ?: [] as $orientationPath) {
+                    if (!\in_array(basename($orientationPath), self::ORIENTATIONS, true)) {
+                        $found[] = new IgnoredCapture($this->relative($orientationPath), IgnoredReason::UnrecognizedDirectory);
+
+                        continue;
+                    }
+
+                    array_push($found, ...$this->unreadable($orientationPath));
+                }
+            }
+        }
+
+        usort($found, static fn (IgnoredCapture $a, IgnoredCapture $b): int => $a->path <=> $b->path);
+
+        return new IgnoredCaptures(\array_slice($found, 0, self::IGNORED_CAP), \count($found));
+    }
+
+    /**
+     * Everything in one orientation directory that is not half of a readable
+     * PNG/sidecar pair.
+     *
+     * @return list<IgnoredCapture>
+     */
+    private function unreadable(string $directory): array
+    {
+        $captures = [];
+        $sidecars = [];
+        $found = [];
+
+        foreach (glob($directory.'/*') ?: [] as $path) {
+            if (is_dir($path)) {
+                $found[] = new IgnoredCapture($this->relative($path), IgnoredReason::UnrecognizedDirectory);
+
+                continue;
+            }
+
+            $name = basename($path);
+            $dot = strrpos($name, '.');
+            $extension = false === $dot ? '' : strtolower(substr($name, $dot + 1));
+            $base = false === $dot ? $name : substr($name, 0, $dot);
+
+            if (!\in_array($extension, ['png', 'json'], true) || !$this->parse($base) instanceof CapturedScreen) {
+                $found[] = new IgnoredCapture($this->relative($path), IgnoredReason::UnparsableName);
+
+                continue;
+            }
+
+            if ('png' === $extension) {
+                $captures[$base] = $path;
+            } else {
+                $sidecars[$base] = $path;
+            }
+        }
+
+        foreach ($captures as $base => $path) {
+            if (!isset($sidecars[$base])) {
+                $found[] = new IgnoredCapture($this->relative($path), IgnoredReason::MissingSidecar);
+            }
+        }
+
+        foreach ($sidecars as $base => $path) {
+            if (!isset($captures[$base])) {
+                $found[] = new IgnoredCapture($this->relative($path), IgnoredReason::OrphanSidecar);
+            }
+        }
+
+        return $found;
+    }
+
+    private function relative(string $path): string
+    {
+        $prefix = rtrim($this->root, '/').'/';
+
+        return str_starts_with($path, $prefix) ? substr($path, \strlen($prefix)) : $path;
     }
 
     /**

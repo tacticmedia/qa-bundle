@@ -1,0 +1,23 @@
+{
+    "controllers": {
+        "@tacticmedia/qa-bundle": {
+            "annotate": {
+                "enabled": true,
+                "fetch": "eager"
+            },
+            "clipboard": {
+                "enabled": true,
+                "fetch": "lazy"
+            },
+            "confirm": {
+                "enabled": true,
+                "fetch": "lazy"
+            },
+            "anchor-highlight": {
+                "enabled": true,
+                "fetch": "lazy"
+            }
+        }
+    },
+    "entrypoints": []
+}

@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [main]
+    tags: ['v*']
   pull_request:
 
 permissions:
@@ -115,3 +116,127 @@ jobs:
           name: panther-failures-php${{ matrix.php }}
           path: tests/Fixtures/app/var/error-screenshots
           if-no-files-found: ignore
+
+  node:
+    name: Capture package (Node)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: js
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd, intl
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: js/package-lock.json
+
+      - name: Install the bundle, which the fixture host serves from
+        working-directory: .
+        run: composer update --no-progress
+
+      - run: npm ci
+
+      - run: npm run build
+
+      # npm `files` cannot reach outside the package, so the shared capture script
+      # is copied in at build time. A missing copy is a silently inert package.
+      - name: The shared capture script is in the publishable set
+        run: |
+          npm pack --dry-run --json | grep -q 'dist/capture/metadata.js'
+
+      - run: npm test
+
+      - run: npx playwright install --with-deps chromium
+
+      - name: Capture against the fixture host
+        run: npm run test:integration
+        env:
+          QA_SCREENSHOTS_DIR: ${{ runner.temp }}/shots
+
+      # The real PHP reader over a tree no PHP wrote. This is what makes the
+      # layout a contract rather than one implementation's habit.
+      - name: The PHP reader parses the produced tree
+        working-directory: .
+        run: vendor/bin/phpunit --group contract
+        env:
+          QA_SCREENSHOTS_DIR: ${{ runner.temp }}/shots
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: capture-tree
+          path: ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
+  docker:
+    name: Review image
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: docker/setup-buildx-action@v3
+
+      - id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/qa-review
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/review/Dockerfile
+          load: true
+          tags: qa-review:ci
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: It serves the empty state with an empty tree
+        run: |
+          mkdir -p "${{ runner.temp }}/empty"
+          docker run -d --name review -p 127.0.0.1:8000:8000 \
+            -v "${{ runner.temp }}/empty:/data/var/screenshots" qa-review:ci
+          curl --retry 20 --retry-delay 2 --retry-all-errors -fsS \
+            http://127.0.0.1:8000/_dev/screenshots | grep -F 'No screenshots yet'
+
+      - if: failure()
+        run: docker logs review
+
+      # Fork pull requests never reach this: they are not push events and have no
+      # write token.
+      - name: Log in to ghcr.io
+        if: github.event_name == 'push'
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push
+        if: github.event_name == 'push'
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/review/Dockerfile
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
