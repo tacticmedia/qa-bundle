@@ -5,12 +5,12 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * Cuts the reviewed region out of a full-page screenshot so the agent reads a
- * small targeted image instead of one that can be 10000 px tall.
+ * Extracts the reviewed region from a full-page screenshot, so that the agent
+ * reads a small image instead of an image that can be 10000 px high.
  *
- * The path handed back is what the prompt prints, so it is made relative to the
- * project directory whenever the crop lands inside it - an agent can open that.
- * A review directory outside the project yields an absolute path.
+ * The prompt prints the returned path. The path is relative to the project
+ * directory when the crop is inside it, so an agent can open it. A review
+ * directory outside the project gives an absolute path.
  */
 final readonly class SelectionCropper
 {
@@ -35,11 +35,11 @@ final readonly class SelectionCropper
     }
 
     /**
-     * Fails open: the prompt still carries the coordinates, so a crop that could
-     * not be produced degrades the instructions rather than breaking the page.
+     * Fails open. The prompt contains the coordinates, so a crop that cannot be
+     * produced reduces the detail in the instructions but does not cause an error.
      *
-     * Both images stay function-local. A full-page PNG decodes to 50-100 MB, so
-     * the prompt loop depends on each one being released when its frame returns.
+     * Both images stay local to the function. A full-page PNG decodes to 50-100 MB,
+     * so the prompt loop needs each one to be released when the frame returns.
      *
      * @param array{x: int, y: int, width: int, height: int} $rectangle
      *

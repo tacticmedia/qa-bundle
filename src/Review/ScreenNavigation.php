@@ -5,15 +5,14 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * Where a capture sits among its neighbours: the screens either side of it in its
- * own group, and the groups either side of that group in sidebar order. Every
- * neighbour wraps, so stepping never dead-ends.
+ * The position of a capture between its neighbours: the screens before and after
+ * it in its own group, and the groups before and after that group in sidebar
+ * order. Each axis is circular, so a step always gives a target. The screen in an
+ * adjacent group is null when that group does not contain this capture, which
+ * occurs after an interrupted run.
  */
 final readonly class ScreenNavigation
 {
-    /**
-     * @param CapturedScreen|null $screenAbove null when that group lacks this capture, which an interrupted run leaves behind
-     */
     public function __construct(
         public int $position,
         public int $total,

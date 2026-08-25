@@ -377,7 +377,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         $prompt = (string) $client->getResponse()->getContent();
 
         self::assertStringContainsString('Still worth fixing.', $prompt);
-        self::assertStringContainsString('this file is missing from the current run', $prompt);
+        self::assertStringContainsString('this file is not in the current run', $prompt);
     }
 
     #[TestDox('Clear all empties the review')]

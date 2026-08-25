@@ -12,4 +12,6 @@ require_once __DIR__.'/../../../../vendor/autoload.php';
 $input = new ArgvInput();
 $kernel = new TestKernel($input->getParameterOption(['--env', '-e'], $_SERVER['APP_ENV'] ?? 'test', true), true);
 
-exit(new Application($kernel)->run($input));
+$application = new Application($kernel);
+
+exit($application->run($input));

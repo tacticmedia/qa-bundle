@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * One element of a captured page: its box in natural image pixels, plus the
- * identity that makes it greppable in templates and translations.
+ * One element of a captured page: its box in natural image pixels, and the
+ * identity that lets a search find it in templates and translations.
  */
 final class MetadataElement
 {

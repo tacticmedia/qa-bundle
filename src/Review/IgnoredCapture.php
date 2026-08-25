@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * One entry the catalog did not read, named relative to the screenshot root.
+ * One entry that the catalog did not read, with a path relative to the screenshot root.
  */
 final readonly class IgnoredCapture
 {

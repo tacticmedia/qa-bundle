@@ -2,10 +2,10 @@
 
 Capture screenshot sets for the [`tacticmedia/qa-bundle`](../README.md) review page from Playwright.
 
-An end-to-end suite proves that a page works. It cannot tell you that the page looks wrong. This
-package shoots every settled screen at five viewports in light and dark, with a sidecar of element
-geometry beside each image, so a human can drag a box over what is broken and get a brief precise
-enough for a coding agent to act on.
+An end-to-end suite shows that a page operates correctly. It does not show that the page looks
+wrong. This package captures each settled screen at five viewports in light and dark, and writes a
+sidecar of element geometry beside each image. A reviewer can then select a rectangle over the
+incorrect area and receive a brief that is accurate enough for a coding agent to use.
 
 ## Install
 
@@ -21,9 +21,13 @@ import { defineConfig } from '@playwright/test';
 import { createRequire } from 'node:module';
 
 export default defineConfig({
+    testDir: './tests',
     globalSetup: createRequire(import.meta.url).resolve('@tacticmedia/qa-capture/playwright/global-setup'),
 });
 ```
+
+`import.meta` needs an ES module. Set `"type": "module"` in the package, or name the file
+`playwright.config.mts`.
 
 ```ts
 // tests/home.spec.ts
@@ -35,8 +39,8 @@ test('a visitor reads the company site', async ({ page, qaScreenshots }) => {
 });
 ```
 
-`test` is Playwright's own `test` with one added fixture, so everything else about it is unchanged.
-`expect` is re-exported for convenience.
+`test` is the Playwright `test` with the `qaScreenshots` fixture and the `qaScreenshotsOptions`
+option that configures it. Its other behaviour does not change. `expect` is re-exported.
 
 Then read the tree:
 
@@ -50,7 +54,10 @@ docker run --rm -p 127.0.0.1:8000:8000 \
 ## Options
 
 ```ts
-export default defineConfig({
+import { defineConfig } from '@playwright/test';
+import type { QaScreenshotsOptions } from '@tacticmedia/qa-capture/playwright';
+
+export default defineConfig<{ qaScreenshotsOptions: QaScreenshotsOptions }>({
     use: {
         qaScreenshotsOptions: {
             root: 'var/screenshots',
@@ -61,31 +68,36 @@ export default defineConfig({
 });
 ```
 
+Playwright resolves a custom option through the generic parameter. Without it, `tsc` reports
+`qaScreenshotsOptions` as an unknown property.
+
 | Option | Default |
 |---|---|
 | `root` | `QA_SCREENSHOTS_DIR`, else `var/screenshots` under the working directory |
 | `viewports` | 390x844, 768x1024, 1024x768, 1920x1080, 1728x1117 |
 | `colorSchemes` | `['light', 'dark']` |
 
-`QA_SCREENSHOTS_DIR` outranks `root` everywhere, so the global setup and the fixture can never clear
-one tree and write another.
+`QA_SCREENSHOTS_DIR` has precedence over `root` in each location, so the global setup and the
+fixture cannot empty one tree and write to a different tree.
 
 ## What to know
 
-- **The tree holds one run.** Global setup empties it before any worker starts, which is the only
-  point that is safe with parallel workers. Two producers writing one root in one run means the
-  second erases the first.
-- **A root set with `test.use()` inside a spec is invisible to global setup.** Set it in the config
-  or in `QA_SCREENSHOTS_DIR`.
-- **`viewport: null` is incompatible.** The capture resizes the viewport to the document height, so
-  it needs one to resize. A `deviceScaleFactor` other than 1 is fine: images are captured at CSS
-  scale.
-- **The label names the screen.** Anything outside `[A-Za-z0-9 _-]` is replaced with a hyphen. A
-  label already captured in the same test is skipped, so a helper called twice shoots once.
-- **Firefox and WebKit work.** Nothing here uses raw CDP.
-- **Identity comes from the spec path and the test title**, slugged into the basename
-  (`AdminProductList-aVisitorChecksOut-001_Home.png`). Two tests that slug identically overwrite
-  each other; directories are included in the journey slug to make that unlikely.
+- **The tree contains one run.** The global setup empties it before the first worker starts, which
+  is the only safe point when workers run in parallel. If two producers write one root in one run,
+  the second removes the output of the first.
+- **The global setup does not read a root that `test.use()` sets in a spec.** Set the root in the
+  Playwright configuration or in `QA_SCREENSHOTS_DIR`.
+- **`viewport: null` is not supported.** The capture changes the viewport to the document height, so
+  a viewport must exist. A `deviceScaleFactor` other than 1 is supported, because the capture uses
+  CSS scale.
+- **The label identifies the screen.** A sequence of characters outside `[A-Za-z0-9 _-]` becomes
+  one hyphen. The capture skips a label already used in the same test, so a helper that is called
+  twice captures once.
+- **Firefox and WebKit are supported.** This package does not use CDP.
+- **The identity comes from the spec path and the test title**, converted to the basename
+  (`AdminProductList-aVisitorChecksOut-001_Home.png`). The path is relative to `testDir`, and its
+  leading directories are part of the journey slug. Two tests that give the same slug overwrite
+  each other.
 
 The on-disk contract is [docs/screenshot-sets.md](../docs/screenshot-sets.md), with a JSON Schema at
 [docs/sidecar.schema.json](../docs/sidecar.schema.json).
@@ -97,14 +109,17 @@ npm ci
 npm run build
 npm test
 
+npx playwright install chromium
 QA_SCREENSHOTS_DIR=/tmp/shots npm run test:integration
 cd .. && QA_SCREENSHOTS_DIR=/tmp/shots vendor/bin/phpunit --group contract
 ```
 
-The integration suite drives the bundle's own PHP fixture host and reads the tree back; the
-`contract` group then runs the real PHP reader over the same directory.
+`npm test` needs no browser. The integration suite needs one.
 
-`src/capture/metadata.js` does not exist: the DOM metadata script is
-`resources/capture/metadata.js` at the repository root, shared verbatim with the PHP trait, and
-copied into `dist/capture/` by `npm run build`. npm's `files` cannot reach outside the package root,
-so the copy is the sharing mechanism - never fork it.
+The integration suite drives the PHP fixture host of the bundle and reads the tree. The `contract`
+group then runs the PHP reader over the same directory.
+
+`src/capture/metadata.js` does not exist. The DOM metadata script is `resources/capture/metadata.js`
+at the repository root. The PHP trait uses the same file without modification, and `npm run build`
+copies it into `dist/capture/`. The npm `files` field cannot reference a path outside the package
+root, so the copy is the method of sharing. Do not create a second version of the file.

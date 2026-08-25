@@ -3,8 +3,8 @@ import { resolve } from 'node:path';
 import type { Viewport } from './types.js';
 
 /**
- * The environment wins everywhere, so global setup and the capture fixture can
- * never clear one tree and write another.
+ * The environment variable has precedence in each location, so the global setup
+ * and the capture fixture always use the same tree.
  */
 export function resolveRoot(option?: string): string {
     const configured = process.env.QA_SCREENSHOTS_DIR;

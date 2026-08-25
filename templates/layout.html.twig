@@ -1,15 +1,14 @@
 {#
-    Screenshot review shell: the sidebar lists every mode/viewport group the last
-    journey run produced, with its outstanding feedback count.
+    Screenshot review shell. The sidebar lists each mode/viewport group from the
+    last journey run, with the number of open notes for that group.
 
-    Pages fill {% block review_content %}. A capture page overriding page_actions
-    calls {{ parent() }} to keep the Generate prompt action; the prompt page is
-    the exception - it has no use for a link to itself.
+    Pages fill {% block review_content %}. A capture page that overrides
+    page_actions calls {{ parent() }} to keep the Generate prompt action. The
+    prompt page does not, because it needs no link to itself.
 
-    Override this template from the host at
-    templates/bundles/TacticMediaQaBundle/layout.html.twig to put the review
-    inside your own shell. The blocks meant for that are `title`, `brand`,
-    `styles`, `scripts` and `sidebar`.
+    To put the review inside your own shell, override this template from the host
+    at templates/bundles/TacticMediaQaBundle/layout.html.twig. Use the blocks
+    `title`, `brand`, `styles`, `scripts` and `sidebar`.
 
     The default `styles` block loads Tailwind from a CDN, which a strict
     content security policy blocks. Such a host overrides the template and links

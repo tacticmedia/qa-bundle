@@ -19,9 +19,8 @@ use TacticMedia\QaBundle\TacticMediaQaBundle;
 
 /**
  * The review page and nothing else. Both trees come from the environment, so one
- * built image serves whatever is mounted at /data: the bundle leaves an env
- * placeholder alone when it checks that the two trees are separate, and nothing
- * about the paths is baked into the compiled container.
+ * built image serves whatever is mounted at /data, and nothing about the paths is
+ * baked into the compiled container.
  */
 final class Kernel extends BaseKernel
 {

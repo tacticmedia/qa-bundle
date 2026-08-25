@@ -22,13 +22,13 @@ use TacticMedia\QaBundle\Review\SelectionCropper;
 use TacticMedia\QaBundle\Review\SelectionResolver;
 
 /**
- * Reviews the screenshots the journeys leave behind and collects visual feedback
- * on them, which the prompt action turns into instructions for an agent.
+ * Shows the screenshots that the journeys wrote and collects visual feedback on
+ * them. The prompt action converts that feedback into instructions for an agent.
  *
- * The routes only exist where the host imports config/routes.php, which belongs
- * under `when@dev`. The host routes /_dev through its dev firewall; on
- * Symfony 7.2+ the bundle registers the CSRF token id as stateless, below that
- * the token is session-backed and the firewall must permit a session.
+ * The routes exist only where the host imports config/routes.php, which belongs
+ * under `when@dev`. The host sends /_dev through its dev firewall. On Symfony 7.2
+ * and later the bundle registers the CSRF token id as stateless. Below 7.2 the
+ * token is session-backed and the firewall must permit a session.
  */
 #[Route('/_dev/screenshots', requirements: self::REQUIREMENTS)]
 final class ScreenshotReviewController extends AbstractController
@@ -46,9 +46,9 @@ final class ScreenshotReviewController extends AbstractController
     public const CSRF_TOKEN = 'screenshot-review';
 
     /**
-     * {name} covers exactly the charset JourneyScreenshots::fileSafe() produces,
-     * which excludes "." and "/" and so rules out traversal by construction. The
-     * same holds for {mode} and {viewport}.
+     * {name} accepts the same character set that JourneyScreenshots::fileSafe()
+     * produces. That set excludes "." and "/", so path traversal is not possible.
+     * {mode} and {viewport} use the same method.
      */
     private const REQUIREMENTS = [
         'mode' => '[a-z][a-z0-9-]*',
@@ -280,9 +280,9 @@ final class ScreenshotReviewController extends AbstractController
     }
 
     /**
-     * Symfony 6.4 has no #[IsCsrfTokenValid]. The manager behind this is the
-     * same-origin one wherever the host supports stateless ids, and the
-     * session-backed one below that.
+     * Symfony 6.4 has no #[IsCsrfTokenValid]. The manager is the same-origin
+     * manager where the host supports stateless ids, and the session-backed
+     * manager below that version.
      */
     private function assertCsrfToken(Request $request): void
     {
@@ -309,7 +309,7 @@ final class ScreenshotReviewController extends AbstractController
         foreach ($this->feedback->all() as $feedbackItem) {
             $captured = $this->catalog->find($feedbackItem->mode, $feedbackItem->viewport, $feedbackItem->name);
 
-            // A regenerated run can drop a screen; its basename still names the test.
+            // A new run can remove a screen. Its basename still gives the test.
             $screen = $captured ?? $this->catalog->describe($feedbackItem->name);
             $metadata = $this->catalog->metadata($feedbackItem->mode, $feedbackItem->viewport, $feedbackItem->name);
 

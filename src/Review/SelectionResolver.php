@@ -5,17 +5,17 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * Turns a stored rectangle into the elements it covers. Resolution happens at
- * prompt-build time against the current sidecar, so a note keeps working across
- * re-runs and the staleness guard catches the case where the page changed shape
- * after the note was written.
+ * Converts a stored rectangle into the elements that it covers. The match occurs
+ * at prompt-build time against the current sidecar, so a note stays usable after
+ * a re-run. The staleness check detects a page whose size changed after the note
+ * was written.
  */
 final readonly class SelectionResolver
 {
-    /** Page size tolerance, and the slack an enclosing box gets on every edge. */
+    /** Page size tolerance, and the margin that an enclosing box receives on each edge. */
     private const SLACK = 2;
 
-    /** Share of an element's own area that must fall inside the rectangle. */
+    /** The fraction of the area of an element that must be inside the rectangle. */
     private const COVERAGE = 0.6;
     private const MAX_SELECTED = 5;
     private const MAX_ENCLOSING = 3;
@@ -71,8 +71,8 @@ final readonly class SelectionResolver
     }
 
     /**
-     * Names the container the selection sits in, even when it landed between
-     * leaves.
+     * Gives the container that holds the selection, including a selection that
+     * covers no complete element.
      *
      * @param list<MetadataElement>                          $elements
      * @param array{x: int, y: int, width: int, height: int} $rectangle
@@ -91,8 +91,8 @@ final readonly class SelectionResolver
     }
 
     /**
-     * Smallest first, skipping anything whose box contains one already taken: the
-     * link rather than the cell and the row around it.
+     * Smallest first. Removes each box that contains a box already selected, so
+     * the result gives the link and not the cell or the row that contains it.
      *
      * @param list<MetadataElement> $sorted
      *

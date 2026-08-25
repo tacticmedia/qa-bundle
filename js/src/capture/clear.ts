@@ -2,8 +2,8 @@ import { mkdir, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 /**
- * Empties the tree and keeps the root itself, which is normally a bind-mount
- * target that must not be replaced.
+ * Empties the tree and keeps the root directory, which is usually a bind-mount
+ * target and must not be replaced.
  */
 export async function clearTree(root: string): Promise<void> {
     await mkdir(root, { recursive: true });

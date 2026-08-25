@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * What a scan passed over. A foreign producer's first mistake otherwise shows up
- * as an empty review page with no explanation, so the page reports this rather
- * than skipping in silence. The list is capped and $total carries the real count.
+ * The entries that a scan ignored. Without this report, a first error from an
+ * external producer gives an empty review page with no explanation. The list has
+ * a maximum length, and $total gives the full count.
  */
 final readonly class IgnoredCaptures
 {

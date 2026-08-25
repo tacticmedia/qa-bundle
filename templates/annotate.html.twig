@@ -3,13 +3,14 @@
 {% import '@TacticMediaQa/_ui.html.twig' as ui %}
 
 {#
-    Set at template level so every block sees them: page_actions renders outside
-    the annotate controller's element, so the keyboard handler takes the
-    destinations as Stimulus values and the visible buttons reuse the same URLs.
-    back_href feeds only the keyboard handler; no visible link uses it.
+    Set at template level so that each block can read them. page_actions renders
+    outside the element of the annotate controller, so the keyboard handler
+    receives the destinations as Stimulus values, and the visible buttons use the
+    same URLs. back_href supplies the keyboard handler only; no visible link uses
+    it.
 
-    Up/down keep the screen and swap the group; a group that never captured this
-    screen has no annotate page, so it opens on its grid instead.
+    Up and down keep the screen and change the group. A group that did not capture
+    this screen has no annotate page, so the link opens the grid of that group.
 #}
 {% set back_href = path('qa_screenshots_group', {mode, viewport}) ~ '#' ~ screen.anchor %}
 {% set above_href = navigation.screenAbove is not null
@@ -49,9 +50,9 @@
         </p>
     {% endif %}
 
-    {# keydown.meta+enter carries no @window: it fires only inside this element, which
-       is where every note form lives. Stimulus matches modifiers strictly, so meta and
-       ctrl need separate descriptors and the arrows never fire while one is held. #}
+    {# keydown.meta+enter has no @window, so it applies only inside this element, which
+       contains each note form. Stimulus matches modifiers exactly, so meta and ctrl need
+       separate descriptors, and the arrow keys do not apply while a modifier is held. #}
     <div class="grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]"
          {{ stimulus_controller('qa-annotate', {
                 previousUrl: path('qa_screenshots_annotate', {mode, viewport, name: navigation.previous.name}),
@@ -102,8 +103,9 @@
         <div>
             <form method="post" action="{{ path('qa_screenshots_feedback_create') }}"
                   class="rounded-lg border border-gray-200 bg-white p-4 dark:border-white/10 dark:bg-white/5">
-                {# Stateless token: the host's csrf-protection controller must double-submit it, or a
-                   browser whose session already used double-submit has the POST rejected. #}
+                {# Stateless from Symfony 7.2: the host's csrf-protection controller must double-submit
+                   the token, or a browser whose session already used double-submit has the POST
+                   rejected. #}
                 <input type="hidden" name="_token" value="{{ csrf_token('screenshot-review') }}" {{ stimulus_controller('csrf-protection') }}>
                 <input type="hidden" name="mode" value="{{ mode }}">
                 <input type="hidden" name="viewport" value="{{ viewport }}">
@@ -158,10 +160,10 @@
                                         Area {{ note.rectangle.width }} × {{ note.rectangle.height }} px at {{ note.rectangle.x }}, {{ note.rectangle.y }}
                                     {% endif %}
                                 </p>
-                                {# No confirm dialog: the e2e suite drives this form, WebDriver
-                                   auto-dismisses dialogs, and the form.submit() workaround skips
-                                   the event the double-submit listener rides on. Clear-all keeps
-                                   its dialog because no e2e drives it. #}
+                                {# No confirm dialog. The e2e suite drives this form, WebDriver
+                                   dismisses dialogs automatically, and form.submit() does not fire
+                                   the event that the double-submit listener needs. Clear-all keeps
+                                   its dialog, because no e2e test drives it. #}
                                 <form method="post" action="{{ path('qa_screenshots_feedback_delete', {id: note.id}) }}">
                                     <input type="hidden" name="_token" value="{{ csrf_token('screenshot-review') }}" {{ stimulus_controller('csrf-protection') }}>
                                     {{ ui.button(ui.icon('trash', 'size-4') ~ '<span class="sr-only">Withdraw</span>', null, 'ghost', null, 'text-red-600 hover:bg-red-50 dark:text-red-400 dark:hover:bg-red-500/10') }}

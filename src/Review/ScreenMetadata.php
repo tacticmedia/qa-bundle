@@ -5,13 +5,13 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * The .json sidecar a journey writes beside every screenshot
+ * The .json sidecar that a journey writes beside each screenshot
  * ({@see \TacticMedia\QaBundle\Test\JourneyScreenshots}). Capture time is the
- * only moment the live DOM exists, and deviceScaleFactor is 1 there, so these CSS
- * pixels are the PNG's pixels.
+ * only point at which the live DOM is available. A producer captures at CSS
+ * scale, so these CSS pixels are the pixels of the PNG.
  *
- * testClass and testFile are null when the sidecar did not come from the trait;
- * the basename still names the test class.
+ * testClass and testFile are null when the producer did not record them; the
+ * basename still names the journey.
  */
 final readonly class ScreenMetadata
 {

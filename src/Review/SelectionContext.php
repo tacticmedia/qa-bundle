@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * What a reviewer's rectangle turned out to cover, resolved against the sidecar
- * of the screenshot it was drawn on ({@see SelectionResolver}).
+ * The elements that a rectangle from the reviewer covers, matched against the
+ * sidecar of the screenshot it was drawn on ({@see SelectionResolver}).
  */
 final readonly class SelectionContext
 {

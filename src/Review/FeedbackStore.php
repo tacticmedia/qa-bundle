@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * Screenshot review notes, kept in a JSON file so a review survives page changes
- * and browser restarts. The file sits under the review directory, outside the
- * screenshot tree, which the journeys empty at the start of every run.
+ * Screenshot review notes in a JSON file, so that a review stays available after
+ * a page change or a browser restart. The file is in the review directory,
+ * outside the screenshot tree, because each journey run empties that tree.
  */
 final readonly class FeedbackStore
 {

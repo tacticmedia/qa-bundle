@@ -50,7 +50,7 @@
                 attributes[name] = cap(value, 120);
             }
         }
-        // innerText does not exist on SVGElement.
+        // SVGElement has no innerText property.
         const inner = (element.innerText ?? '').replace(/\s+/g, ' ').trim();
         elements.push({
             selector: selectorFor(element),

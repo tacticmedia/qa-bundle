@@ -17,5 +17,6 @@ services:
     volumes:
       - ./var/screenshots:/data/var/screenshots
       - ./var/review:/data/var/review
-    # On Linux the container writes notes as uid 1000. Uncomment to own them yourself.
-    # user: "${UID:-1000}:${GID:-1000}"
+    # On Linux the container writes notes as uid 1000. To own them yourself, start the
+    # service with `docker compose run --user "$(id -u):$(id -g)" review`. A `user:` key
+    # here cannot do it: compose never sees $UID or $GID, which no shell exports.

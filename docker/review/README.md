@@ -1,19 +1,20 @@
 # The review host
 
-A Symfony application whose only job is to serve `/_dev/screenshots` from two mounted
-directories. It exists so a project with no PHP toolchain can still review its screenshot sets.
+A Symfony application that serves `/_dev/screenshots` from two mounted directories and nothing
+else. `/` redirects to that page. The application lets a project with no PHP tools review its
+screenshot sets.
 
-It is deliberately not the demo (no Tailwind build, no journey) and not the test fixture (whose
-hand-registered importmap services only exist because `symfony/asset-mapper` is a dev dependency
-there; here it is a real dependency and TwigBundle wires `importmap()` itself).
+This application is not the demo: it has no Tailwind build and no journey. It is also not the test
+fixture. That host registers the importmap Twig services manually, because `symfony/asset-mapper` is
+a dev dependency there. Here it is a normal dependency, so TwigBundle registers `importmap()`.
 
 ## The mount contract
 
 **`/data` is the reviewed project's root as the container sees it. Mount each tree at the path it
 has on the host.**
 
-That is what makes the generated agent brief print paths the host can open: the brief names a
-capture relative to the project root, and the container's idea of that root is `/data`.
+The generated agent brief then prints paths that the host can open, because the brief gives the
+path of a capture relative to the project root, and the container uses `/data` as that root.
 
 ```
 docker run --rm -p 127.0.0.1:8000:8000 \
@@ -22,7 +23,7 @@ docker run --rm -p 127.0.0.1:8000:8000 \
     ghcr.io/tacticmedia/qa-review:latest
 ```
 
-A project whose trees live elsewhere mounts them where they are and says so:
+A project whose trees are at different paths mounts them at those paths and sets the variables:
 
 ```
 docker run --rm -p 127.0.0.1:8000:8000 \
@@ -33,23 +34,23 @@ docker run --rm -p 127.0.0.1:8000:8000 \
     ghcr.io/tacticmedia/qa-review:latest
 ```
 
-`QA_SCREENSHOTS_DIR`, `QA_REVIEW_DIR` and `QA_PROJECT_ROOT` are read at runtime, so changing them
-needs no rebuild. They default to `/data/var/screenshots`, `/data/var/review` and `/data`. Running
-with no mounts at all serves the empty state.
+The application reads `QA_SCREENSHOTS_DIR`, `QA_REVIEW_DIR` and `QA_PROJECT_ROOT` at runtime, so a
+change to them needs no rebuild. They default to `/data/var/screenshots`, `/data/var/review` and
+`/data`. With no mounts, the application serves the empty state.
 
-The page has no authentication. Publish the port on `127.0.0.1` unless you mean to share it.
+The page has no authentication. Publish the port on `127.0.0.1` unless you intend to share it.
 
-On Linux the container writes notes and crops as uid 1000. Pass `--user "$(id -u):$(id -g)"` to own
-them yourself.
+On Linux the container writes notes and crops as uid 1000. To own them, pass
+`--user "$(id -u):$(id -g)"`.
 
 ## Maintenance
 
-`composer.lock` is committed. The bundle is consumed through a path repository at `../..`, and the
-Dockerfile copies the repository in the same shape, so the relative path resolves identically on a
-developer's disk and inside the image.
+`composer.lock` is committed. The application consumes the bundle through a path repository at
+`../..`, and the Dockerfile copies the repository with the same structure, so the relative path
+resolves to the same location on a developer machine and in the image.
 
-**A change to the bundle's dependencies means running `composer update` here.** The `docker` CI job
-builds this image on every push and is the drift detector.
+**After a change to the dependencies of the bundle, run `composer update` here.** The `docker` CI
+job builds this image on each push and pull request, and detects a difference.
 
 ## Local development without Docker
 
@@ -62,7 +63,8 @@ QA_PROJECT_ROOT=/absolute/path/to/project \
     php -S 127.0.0.1:8000 -t public public/index.php
 ```
 
-Leave `APP_ENV` unset for this. The built-in server hands a request for an existing static file
-straight to the router script, so compiled assets under `public/assets` are executed as PHP rather
-than served; `dev` routes them through AssetMapper instead and works. The image runs `prod` and
-serves those files through Caddy, which is what `php_server` does before it reaches PHP.
+Do not set `APP_ENV` for this command. The built-in server sends a request for an existing static
+file to the router script, so it executes the compiled assets under `public/assets` as PHP instead
+of serving them. In `dev` the request goes through AssetMapper, which operates correctly. The image
+runs `prod` behind Caddy, where `php_server` serves an existing file directly and sends other
+requests to PHP.

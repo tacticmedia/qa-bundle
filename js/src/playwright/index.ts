@@ -12,15 +12,15 @@ export type { ColorScheme, QaScreenshotsOptions, Viewport } from '../capture/typ
 
 export interface QaScreenshots {
     /**
-     * Shoots the settled screen at every configured viewport and colour scheme.
-     * A label already captured in this scenario is skipped.
+     * Captures the settled screen at each configured viewport and colour scheme.
+     * The fixture skips a label already captured in this scenario.
      */
     capture(label: string): Promise<void>;
 }
 
 /**
- * Playwright's `test` with a `qaScreenshots` fixture. Override the defaults from
- * the config with `use: { qaScreenshotsOptions: { ... } }`.
+ * The Playwright `test` with a `qaScreenshots` fixture. To replace the defaults,
+ * set `use: { qaScreenshotsOptions: { ... } }` in the Playwright configuration.
  */
 export const test = base.extend<{
     qaScreenshotsOptions: QaScreenshotsOptions;

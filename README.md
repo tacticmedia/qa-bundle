@@ -1,34 +1,62 @@
-# tacticmedia/qa-bundle
+# QA bundle
 
-Full-page screenshot capture for Symfony Panther journeys, and a dev-only review page that turns a
-human's visual feedback into a brief for a coding agent.
+[![Packagist](https://img.shields.io/packagist/v/tacticmedia/qa-bundle)](https://packagist.org/packages/tacticmedia/qa-bundle)
+[![PHP](https://img.shields.io/packagist/dependency-v/tacticmedia/qa-bundle/php)](https://packagist.org/packages/tacticmedia/qa-bundle)
+[![License](https://img.shields.io/packagist/l/tacticmedia/qa-bundle)](LICENSE)
 
-Two halves, usable independently:
+## TL;DR
 
-- **Capture.** `TacticMedia\QaBundle\Test\JourneyScreenshots` - a PHPUnit trait.
-  `captureFullPageScreenshot()` shoots the settled screen at every configured viewport and colour
-  scheme, and writes a `.json` sidecar of element geometry beside each PNG. No container, no bundle
-  needed. [`@tacticmedia/qa-capture`](js/) does the same from Playwright, for projects with no PHP.
-- **Review.** `/_dev/screenshots` - the review page. Browse the captures, drag a rectangle over what
-  is wrong, write a note, and generate a plain-text prompt that names the journey, the scenario, the
-  screen, the page URL, the elements under the selection and a cropped image of it. It runs in this
-  application, or as a container over any project's tree.
+Sometimes a broken page doesn't cause an error that can be captured by a machine. A heading that
+overlaps a badge; a table that loses its right gutter at one breakpoint; text with too little
+contrast in dark mode, and so on. Every assertion passes, and yet the user experience is bad.
 
-The two halves share nothing but a directory layout, written down in
-[docs/screenshot-sets.md](docs/screenshot-sets.md). Any tool that writes that layout can be
-reviewed.
+Only a person finds those defects, and that person's job is not easy: if you're testing 10 pages for
+four different resolutions, two different rendering engines and both dark and light mode, it's 160
+screens to review, every single time. How will you scale it to 100 pages?
 
-Requires PHP 8.2+, `ext-gd`, and Symfony 6.4, 7.4 or 8.1 - the branches Symfony still supports. A
-6.4 or 7.4 application can shoot a baseline before an upgrade and the same screens after it.
+This bundle is meant to ease the pain: Use the trait to capture all the screenshots and metadata at
+the points that matter to you, and use the UI to review and annotate all screens. Once you're done,
+generate a prompt for your favourite agent and let the computer compute.
 
-## Install
+<details>
+  <summary>▶️ <b>Click to see it in action</b></summary>
+  <br>
+  <img src="docs/assets/tacticmedia.webp" alt="Demo Animation" width="100%">
+</details>
+
+## How it works
+
+The bundle has two halves. They operate independently.
+
+**Capture** writes a full-page PNG of each settled screen, at five viewports in light and dark, with
+a JSON sidecar of element geometry beside each image. `TacticMedia\QaBundle\Test\JourneyScreenshots`
+is a PHPUnit trait for a Symfony Panther journey. It does not use the container and does not need
+bundle registration. [`@tacticmedia/qa-capture`](js/) performs the same capture from Playwright, for
+a project that has no PHP.
+
+**Review** is a page at `/_dev/screenshots` that the host enables in `dev`. It lists the captures,
+takes a rectangle and a note on any of them, and generates a plain-text prompt. The page runs in
+your application, or in a container over the tree of another project.
+
+The two halves share one on-disk contract, and nothing else: the directory layout and the sidecar
+shape, specified in [docs/screenshot-sets.md](docs/screenshot-sets.md) with a JSON Schema at
+[docs/sidecar.schema.json](docs/sidecar.schema.json). The review page reads the output of any tool
+that writes that layout.
+
+Why is that important? This bundle doesn't dictate how you'll create the screenshots.
+
+## Requirements to run the UI
+
+PHP 8.2 or later, `ext-gd`, and Symfony 6.4, 7.4, or 8.1 and later.
+
+## Quick start
 
 ```
 composer require --dev tacticmedia/qa-bundle symfony/panther
 ```
 
-`symfony/panther` is only needed for the capture trait, so it is a suggestion here rather than a
-dependency - a project that only wants the review page leaves it out.
+Only the capture trait uses `symfony/panther`, so the bundle lists it as a suggestion and not as a
+dependency. A project that needs the review page only can omit it.
 
 Enable it for `dev` only, in `config/bundles.php`:
 
@@ -45,28 +73,7 @@ when@dev:
         type: php
 ```
 
-Composer writes the Stimulus controllers into `assets/controllers.json` for you: the package carries
-the `symfony-ux` keyword, so Flex's package synchronizer adds the block on install and keeps it on
-every later run. Confirm it landed - **without it the page renders and nothing responds to a drag or
-a key**:
-
-```json
-{
-    "controllers": {
-        "@tacticmedia/qa-bundle": {
-            "annotate": { "enabled": true, "fetch": "eager" },
-            "clipboard": { "enabled": true, "fetch": "lazy" },
-            "confirm": { "enabled": true, "fetch": "lazy" },
-            "anchor-highlight": { "enabled": true, "fetch": "lazy" }
-        }
-    }
-}
-```
-
-That synchronizer rewrites the whole file from the installed `symfony-ux` packages, so an entry added
-by hand for a package without the keyword is dropped on the next composer run.
-
-Use the trait from your journey base class:
+Use the trait once, on your journey base class:
 
 ```php
 use TacticMedia\QaBundle\Test\JourneyScreenshots;
@@ -77,288 +84,45 @@ abstract class JourneyTestCase extends PantherTestCase
 }
 ```
 
-The capture drives Chrome's DevTools protocol. A client that carries no `RemoteWebDriver` is a
-silent no-op, and a stage label repeated within one test is captured once - a journey helper
-called twice shoots its screen once.
+Call `captureFullPageScreenshot($client, 'Cart with two items')` at each point in a journey where
+the screen has settled. Run the journeys, start the application, and open `/_dev/screenshots`.
 
-## Configuration
+Flex writes the Stimulus controllers into `assets/controllers.json` during installation, but only
+where that file exists. Without the block the page renders and does not respond to a selection or
+to a key. [docs/host-setup.md](docs/host-setup.md) gives the block and the rest of the host setup.
 
-```yaml
-when@dev:
-    qa:
-        screenshots_dir: '%kernel.project_dir%/var/screenshots'
-        review_dir: '%kernel.project_dir%/var/review'
-```
+## Documentation
 
-Both default to the values above. `review_dir` holds the notes file and the generated crops, and
-must sit outside `screenshots_dir`, which every run empties - the bundle refuses a configuration
-where it does not.
-
-The capture trait never reads this configuration - it runs inside PHPUnit, with no container. It
-takes its root from `QA_SCREENSHOTS_DIR`, falling back to `getcwd().'/var/screenshots'`. Point
-the two at the same tree.
-
-Override what is captured on your journey base class:
-
-```php
-protected static function screenshotViewports(): array
-{
-    return [['width' => 1440, 'height' => 900]];
-}
-
-protected static function screenshotColorSchemes(): array
-{
-    return ['light'];
-}
-```
-
-The orientation directory follows from each viewport's shape. The review page discovers whatever the
-tree holds, so a new viewport or a third colour scheme needs no configuration.
-
-## What the host has to provide
-
-**A firewall that lets `/_dev/` through, where the host has one.** The page has no authentication
-of its own and needs nothing from SecurityBundle:
-
-```yaml
-security:
-    firewalls:
-        dev:
-            pattern: ^/(_(profiler|wdt|dev)|css|images|js)/
-            security: false
-            stateless: true
-```
-
-**`framework.csrf_protection` enabled.** The write actions validate the token through
-`AbstractController::isCsrfTokenValid()`, which resolves `security.csrf.token_manager` from
-FrameworkBundle. With CSRF protection switched off that service is absent and every write is
-rejected.
-
-**The recipe's `csrf-protection` Stimulus controller, on Symfony 7.2 and up.** There the bundle
-prepends `screenshot-review` to `framework.csrf_protection.stateless_token_ids`, and its forms carry
-`{{ stimulus_controller('csrf-protection') }}` on the hidden token input. `SameOriginCsrfTokenManager`
-never downgrades: once a session has validated a request that carried the double-submit cookie, every
-later request from it must carry one too. Any browser that has used your application is in that state,
-so without that controller the POSTs are rejected - invisibly, because the redirect still happens and
-it reads as a page refresh where the write never occurred. The controller ships with the
-`symfony/stimulus-bundle` recipe as `assets/controllers/csrf_protection_controller.js` - Encore
-hosts receive it through that same recipe; do not rename it.
-
-Symfony 6.4 and 7.0 have no stateless token ids, so there the token is session-backed and that
-controller does not exist. Sessions must be enabled, and `/_dev/screenshots` must be able to start
-one, or every write is rejected as an invalid token.
-
-**A running Stimulus application.** Whatever builds your JavaScript, the page needs the host's
-Stimulus application started, and the four `qa-*` controllers registered in it. StimulusBundle's Twig
-helpers are bundler-neutral, so the markup is the same everywhere; only the delivery differs.
-
-On **AssetMapper** there is nothing to do. Flex writes the `controllers.json` block and adds
-`@hotwired/stimulus` and `@hotwired/turbo` to `importmap.php`, and the bundle registers `assets/dist`
-as an AssetMapper path itself.
-
-On **Webpack Encore** and **Symfony Reprise** the controllers are resolved from `node_modules`
-instead. Flex writes the same `controllers.json` block, and adds the package link and its peers to
-`package.json`:
-
-```json
-{
-    "devDependencies": {
-        "@hotwired/stimulus": "^3.0.0",
-        "@hotwired/turbo": "^8.0.0",
-        "@tacticmedia/qa-bundle": "file:vendor/tacticmedia/qa-bundle/assets"
-    }
-}
-```
-
-Run `npm install` and rebuild after `composer require`. `@hotwired/turbo` is not optional:
-`annotate_controller.js` imports `visit` at module scope, so an unresolved Turbo takes the whole
-annotate controller down, not only keyboard navigation.
-
-Those two hosts also have to say how their JavaScript reaches the page, because the default `scripts`
-block calls `importmap()`. Override the layout:
-
-```twig
-{# templates/bundles/TacticMediaQaBundle/layout.html.twig #}
-{% extends '@!TacticMediaQa/layout.html.twig' %}
-
-{% block scripts %}
-    {{ encore_entry_script_tags('app') }}
-{% endblock %}
-```
-
-`{{ reprise_entry_script_tags('app') }}` for Reprise. Name the entrypoint that starts your Stimulus
-application; `app` is only the recipe default. `@!` is TwigBundle's reference to the bundle's own copy
-of the template, so the override can extend the file it replaces.
-
-`symfony/reprise` needs PHP 8.4 and Symfony 7.4 or 8.x, so a 6.4 or 7.4 host is on Encore or
-AssetMapper.
-
-**Styling.** The bundle's default layout loads Tailwind from a CDN and ships no compiled CSS. Under a
-strict content security policy that script is blocked, so override the layout with your own shell:
-
-```
-templates/bundles/TacticMediaQaBundle/layout.html.twig
-```
-
-The blocks meant for that are `title`, `brand`, `styles`, `scripts` and `sidebar`; page content
-arrives in `review_content`.
-
-```twig
-{% extends '@!TacticMediaQa/layout.html.twig' %}
-
-{% block styles %}
-    <link rel="stylesheet" href="{{ asset('styles/app.css') }}">
-{% endblock %}
-```
-
-`asset()` is `symfony/asset`, which AssetMapper does not require - install it where the override
-needs it.
-
-If your Tailwind build should pick up the bundle's own markup, add its templates as a source. A
-`vendor/` directory in your `.gitignore` does not hide them: Tailwind filters what it discovers by
-itself, not a path you name.
-
-```css
-@source "../../vendor/tacticmedia/qa-bundle/templates";
-```
-
-`demo/` is that override, working, on an AssetMapper host: `demo/README.md` has the walk-through.
-
-**Prompt wording.** `prompt.txt.twig` is deliberately generic. Put your project's conventions,
-document paths and test command in
-`templates/bundles/TacticMediaQaBundle/prompt.txt.twig`.
-
-The annotate controller assigns overlay geometry through the CSSOM, which `style-src` does not gate,
-and previews need no `blob:` sources, so a strict policy needs no relaxation beyond the stylesheet.
-
-## Running the page
-
-Journeys write into `screenshots_dir`; the review reads it. When the two run in different containers,
-bind-mount both directories from the host so a review survives a rebuild and the crops are readable
-from the checkout.
-
-```
-https://localhost/_dev/screenshots
-```
-
-| Key | Moves to |
+| Document | Contents |
 | --- | --- |
-| Left / Right | The previous / next capture in this group. |
-| Up / Down | The same capture one group up / down the sidebar, or that group's grid when it lacks this capture. |
-| Escape | The selection, the focused field, then the group grid, in that order. |
-| Cmd+Enter, Ctrl+Enter | Saves the note being written. |
+| [docs/host-setup.md](docs/host-setup.md) | `controllers.json`, the trait, configuration, firewall, prompt wording. |
+| [docs/csrf.md](docs/csrf.md) | CSRF on each Symfony branch: the stateless token id and the `csrf-protection` controller. |
+| [docs/frontend.md](docs/frontend.md) | The page's JavaScript on AssetMapper, Encore and Reprise, styling, content security policy. |
+| [docs/review.md](docs/review.md) | The review page: directories, keyboard, coordinates. |
+| [docs/how-it-works.md](docs/how-it-works.md) | The design: measurement, the sidecar, the basename, selection resolution, crops, notes. |
+| [docs/without-php.md](docs/without-php.md) | Capture from Playwright and review in a container. |
+| [docs/screenshot-sets.md](docs/screenshot-sets.md) | The on-disk contract between producers and the review, with [sidecar.schema.json](docs/sidecar.schema.json). |
+| [docs/development.md](docs/development.md) | Test gates, CI legs, the npm package, the review image, the demo. |
+| [js/README.md](js/README.md) | `@tacticmedia/qa-capture`, the Playwright producer. |
+| [docker/review/README.md](docker/review/README.md) | `ghcr.io/tacticmedia/qa-review`, the review image. |
+| [demo/README.md](demo/README.md) | A Symfony 8.1 host that runs both producers and the container. |
 
-Both axes wrap. Coordinates are stored in natural image pixels, so a note keeps its meaning whatever
-width the page renders the screenshot at - and `y` is measured from the top of the page, not the top
-of the viewport.
+## Contributions
 
-## Using it without PHP
-
-The review page reads a directory tree and nothing else, so neither half needs a PHP toolchain on
-the host.
-
-Capture from Playwright:
-
-```
-npm i -D @tacticmedia/qa-capture @playwright/test
-```
-
-```ts
-// playwright.config.ts
-import { createRequire } from 'node:module';
-
-export default defineConfig({
-    globalSetup: createRequire(import.meta.url).resolve('@tacticmedia/qa-capture/playwright/global-setup'),
-});
-```
-
-```ts
-// tests/home.spec.ts
-import { test } from '@tacticmedia/qa-capture/playwright';
-
-test('a visitor reads the company site', async ({ page, qaScreenshots }) => {
-    await page.goto('https://tacticmedia.com.au/');
-    await qaScreenshots.capture('Home');
-});
-```
-
-The global setup empties the tree once before any worker starts; the fixture shoots every viewport
-and colour scheme. Defaults and overrides (`qaScreenshotsOptions`) are in [js/README.md](js/README.md).
-
-Review in a container:
-
-```yaml
-# compose.yaml
-services:
-  review:
-    image: ghcr.io/tacticmedia/qa-review:latest
-    ports:
-      - "127.0.0.1:8000:8000"
-    volumes:
-      - ./var/screenshots:/data/var/screenshots
-      - ./var/review:/data/var/review
-```
-
-```
-docker compose up review
-open http://localhost:8000/_dev/screenshots
-```
-
-**`/data` is your project root as the container sees it.** Mount each tree at the path it has on the
-host, so the generated brief names paths you can open. `QA_SCREENSHOTS_DIR`, `QA_REVIEW_DIR` and
-`QA_PROJECT_ROOT` override the defaults at runtime. The page has no authentication, which is why the
-port is bound to `127.0.0.1`; on Linux the container writes as uid 1000, so add
-`user: "${UID:-1000}:${GID:-1000}"` to own the notes yourself. Details in
-[docker/review/README.md](docker/review/README.md).
-
-Capture never runs in the container: browsers live on the host, and Playwright manages its own.
-
-## Demo
-
-`demo/` is a runnable end-to-end example: a stock Symfony 8.1 application whose single Panther
-journey traverses https://tacticmedia.com.au, captures every screen at five viewports in light and
-dark, and serves the review page over the captured tree. `demo/playwright/` is the same journey
-written for Playwright, writing the same tree, so you can switch producers and see an identical
-review. `demo/README.md` walks through both, and through reading the tree from the container.
-
-## Development
-
-```
-composer install
-vendor/bin/phpstan analyse
-vendor/bin/phpunit --exclude-group e2e
-composer cs:check
-vendor/bin/bdi detect drivers && vendor/bin/phpunit --group e2e
-```
-
-CI runs PHPStan and the non-E2E tests on PHP 8.2/Symfony 6.4, 8.3/7.4, 8.4/8.1 and 8.5/8.1, the
-E2E group on 8.2/6.4 and 8.5/8.1, and the style check on 8.5. To reproduce one leg, pin the
-branch the way the workflow does - a plain `composer update` pins only what `composer.json` names and
-lets the transitive Symfony packages float to their latest branch:
-
-```
-composer global require symfony/flex
-composer config extra.symfony.require 6.4.*
-composer update
-```
-
-The E2E group drives a real Chrome against `tests/Fixtures/app`, served by the PHP built-in web
-server.
-
-The capture package and the review image have their own gates:
-
-```
-cd js && npm ci && npm run build && npm test
-QA_SCREENSHOTS_DIR=/tmp/shots npm run test:integration
-QA_SCREENSHOTS_DIR=/tmp/shots vendor/bin/phpunit --group contract
-
-docker build -f docker/review/Dockerfile -t qa-review:local .
-```
-
-The `contract` group is the one that matters most: it runs the real reader over a tree no PHP wrote,
-which is what keeps the layout a contract rather than one implementation's habit. It skips itself
-without `QA_SCREENSHOTS_DIR`.
+Non-LLM-slop contributions and issues are most definitely welcome.
 
 ## License
 
-MIT.
+MIT. See [LICENSE](LICENSE).
+
+## One more thing
+
+This package is brought to you by [Tactic Media, a South Australian software development
+business](https://tacticmedia.com.au).
+
+We love to help businesses become more efficient by automating tasks that shouldn't have been done
+by a human in the first place.
+
+Head over to our website to check out what we do, and if you think we can help you give your
+employees more time to spend on something more creative,
+[let's talk](https://tacticmedia.com.au/contact.html).

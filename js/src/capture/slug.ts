@@ -3,18 +3,18 @@ import { basename } from 'node:path';
 const SCENARIO_CAP = 80;
 
 /**
- * Mirrors JourneyScreenshots::fileSafe(): a run of characters outside the label
- * grammar collapses to one hyphen. Replaced, never dropped, so distinct labels
- * stay distinct.
+ * Same behaviour as JourneyScreenshots::fileSafe(): a sequence of characters
+ * outside the label grammar becomes one hyphen. The characters are replaced and
+ * not removed, so two different labels stay different.
  */
 export function fileSafeLabel(label: string): string {
     return label.replace(/[^A-Za-z0-9 _-]+/g, '-');
 }
 
 /**
- * The spec file, PascalCased with its directories included. Two specs of the same
- * name in different directories would otherwise slug identically and overwrite
- * each other.
+ * The spec file in PascalCase, with its directories. Without the directories, two
+ * specs with the same name in different directories give the same slug and
+ * overwrite each other.
  */
 export function journeySlug(specPath: string): string {
     const withoutExtension = specPath.replace(/\.(spec|test)\.[cm]?[jt]sx?$/i, '').replace(/\.[cm]?[jt]sx?$/i, '');
@@ -40,8 +40,8 @@ export function scenarioSlug(parts: string[]): string {
 }
 
 /**
- * Playwright's titlePath starts with the project name and the spec file. What
- * identifies the scenario is everything after those.
+ * The Playwright titlePath starts with the project name and the spec file. The
+ * scenario identity is the remainder of the path.
  */
 export function scenarioParts(titlePath: string[], specFile: string): string[] {
     const file = basename(specFile);

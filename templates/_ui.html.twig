@@ -1,12 +1,12 @@
 {#
-    Markup the review pages share. Macros rather than components, so the bundle
-    needs no Twig component package and a host restyles by overriding this one
-    file.
+    Markup that the review pages share. These are macros and not components, so
+    the bundle needs no Twig component package, and a host changes the styling by
+    an override of this one file.
 
-    button(): `label` is raw markup, so a caller passing data must escape it.
-    `extra` takes the stimulus_* helper output.
+    button(): `label` is raw markup, so a caller that passes data must escape it.
+    `extra` accepts the output of the stimulus_* helpers.
     icon(): sun, moon, list, up, down, left, trash.
-    ignored_list(): the reader emits reason tokens; the wording lives here.
+    ignored_list(): the reader supplies reason tokens. The wording is here.
 #}
 {% macro button(label, href = null, kind = 'primary', extra = null, class = '', type = 'submit') %}
     {% set kinds = {

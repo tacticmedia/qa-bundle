@@ -41,8 +41,9 @@ export interface CaptureIdentity {
 }
 
 /**
- * One scenario's captures. Sequence and label dedupe reset with the session, so a
- * helper called twice shoots its screen once and every scenario numbers from 001.
+ * The captures of one scenario. The sequence and the set of used labels reset
+ * with the session, so a helper that is called twice captures its screen once,
+ * and each scenario starts at 001.
  */
 export class CaptureSession {
     private sequence = 0;
@@ -85,10 +86,10 @@ export class CaptureSession {
     }
 
     /**
-     * The document height only exists once the page is laid out at the device
-     * width, so the viewport is grown to the measured height and measured again:
-     * vh-sized elements grow along. The loop ends with the viewport exactly as
-     * tall as the number stamped into the sidecar, which is the whole invariant.
+     * The document height is only known after layout at the device width. The
+     * viewport is then increased to the measured height and measured a second time,
+     * because vh-sized elements increase with it. The viewport height then equals
+     * the number written to the sidecar, which is the required invariant.
      */
     private async captureViewport(viewport: Viewport, stage: string): Promise<void> {
         const [first] = this.colorSchemes;
@@ -120,8 +121,8 @@ export class CaptureSession {
             await mkdir(directory, { recursive: true });
             await this.page.emulateMedia({ colorScheme: mode });
 
-            // scale 'css' makes the image one pixel per CSS pixel whatever the
-            // context's deviceScaleFactor is, which is what the sidecar records.
+            // scale 'css' gives one image pixel for each CSS pixel at any
+            // deviceScaleFactor of the context, which is the value the sidecar records.
             const image = await this.page.screenshot({ scale: 'css', animations: 'disabled' });
             const base = join(directory, `${this.identity.journey}-${this.identity.scenario}-${stage}`);
 

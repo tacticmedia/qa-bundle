@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * One screen captured by a journey, identified by the basename its mode and
- * viewport copies share. Everything here is parsed out of that basename; where
- * the test lives is the sidecar's business ({@see ScreenMetadata::$testFile}),
- * because a basename cannot carry a path.
+ * One screen that a journey captured. The basename identifies it, and the copies
+ * for each mode and viewport use the same basename. Each property here comes from
+ * that basename. The path of the test is in the sidecar
+ * ({@see ScreenMetadata::$testFile}), because a basename cannot contain a path.
  */
 final class CapturedScreen
 {
@@ -21,7 +21,7 @@ final class CapturedScreen
     ) {
     }
 
-    /** Fragment id of this screen's card on the group grid; a label may contain spaces. */
+    /** Fragment id of the card for this screen on the group grid. A label can contain spaces. */
     public function anchor(): string
     {
         return 'screen-'.str_replace(' ', '-', $this->name);

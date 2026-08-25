@@ -63,7 +63,7 @@
             "/.dockerignore",
             "/demo",
             "/docker",
-            "/docs",
+            "/docs/assets",
             "/js",
             "/tests"
         ]

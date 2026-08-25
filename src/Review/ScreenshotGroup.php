@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * One mode/viewport directory of screenshots, the unit the review sidebar lists.
+ * One mode/viewport directory of screenshots. The review sidebar lists these directories.
  */
 final class ScreenshotGroup
 {

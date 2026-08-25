@@ -8,8 +8,8 @@ export type ColorScheme = 'light' | 'dark' | 'no-preference';
 
 export interface QaScreenshotsOptions {
     /**
-     * Screenshot tree root. QA_SCREENSHOTS_DIR outranks it, so a run cannot
-     * disagree with itself between global setup and the capture.
+     * Screenshot tree root. QA_SCREENSHOTS_DIR has precedence over it, so the
+     * global setup and the capture always use the same root.
      */
     root?: string;
     viewports?: Viewport[];

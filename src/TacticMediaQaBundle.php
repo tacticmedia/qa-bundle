@@ -14,12 +14,12 @@ use Symfony\Component\Security\Csrf\SameOriginCsrfTokenManager;
 use TacticMedia\QaBundle\Controller\ScreenshotReviewController;
 
 /**
- * Registers the screenshot review page and the services behind it. The capture
- * trait ({@see Test\JourneyScreenshots}) needs none of
- * this - it runs inside PHPUnit, with no container.
+ * Registers the screenshot review page and its services. The capture trait
+ * ({@see Test\JourneyScreenshots}) does not use them, because it runs in PHPUnit
+ * with no container.
  *
- * The host decides the environment: enable the bundle for `dev` only in
- * config/bundles.php and import config/routes.php under `when@dev`.
+ * The host selects the environment: enable the bundle for `dev` only in
+ * config/bundles.php, and import config/routes.php under `when@dev`.
  */
 final class TacticMediaQaBundle extends AbstractBundle
 {
@@ -32,8 +32,8 @@ final class TacticMediaQaBundle extends AbstractBundle
 
     public function prependExtension(ContainerConfigurator $configurator, ContainerBuilder $container): void
     {
-        // Stateless ids exist from Symfony 7.2; below that the page's token is session-backed,
-        // so the host must not put /_dev behind a session-less firewall.
+        // Stateless ids exist from Symfony 7.2. Below that version the token of the page is
+        // session-backed, so the host must not put /_dev behind a firewall with no session.
         if (class_exists(SameOriginCsrfTokenManager::class)) {
             $container->prependExtensionConfig('framework', [
                 'csrf_protection' => [
@@ -67,9 +67,9 @@ final class TacticMediaQaBundle extends AbstractBundle
     }
 
     /**
-     * Every journey run empties screenshots_dir, so a review_dir inside it loses the notes
-     * and the crops without a word. A path that resolves to an env placeholder cannot be
-     * compared, and is left alone rather than guessed at.
+     * Each journey run empties screenshots_dir, so a review_dir inside it loses the notes and
+     * the crops with no message. Env placeholders compare as opaque strings, so two trees named
+     * by different variables always pass, and two trees built from one variable are rejected.
      */
     private function assertTreesAreSeparate(ContainerBuilder $container, string $screenshotsDir, string $reviewDir): void
     {

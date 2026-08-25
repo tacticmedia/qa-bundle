@@ -12,7 +12,7 @@ use Twig\Environment;
 
 /**
  * The review page in a host that builds its JavaScript with a bundler instead of AssetMapper,
- * and so overrides the layout the way the README documents. What is under test is that
+ * and so overrides the layout the way docs/frontend.md documents. What is under test is that
  * contract - the `@!` parent reference, the block name, and the bundle rendering at all with
  * no importmap() function in the environment - not the tag the host's bundle emits.
  */

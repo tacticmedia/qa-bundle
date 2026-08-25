@@ -18,12 +18,12 @@
         "pageWidth": {
             "type": "integer",
             "minimum": 1,
-            "description": "Width of the PNG in pixels, which is also CSS pixels at deviceScaleFactor 1."
+            "description": "Width of the PNG in pixels, which is one CSS pixel per image pixel."
         },
         "pageHeight": {
             "type": "integer",
             "minimum": 1,
-            "description": "Height of the PNG in pixels, which is also CSS pixels at deviceScaleFactor 1."
+            "description": "Height of the PNG in pixels, which is one CSS pixel per image pixel."
         },
         "elements": {
             "type": "array",
@@ -32,7 +32,7 @@
         },
         "testClass": {
             "type": ["string", "null"],
-            "description": "Producer-side identifier of the journey."
+            "description": "Producer-side identifier of the journey. Stored but not currently rendered."
         },
         "testFile": {
             "type": ["string", "null"],

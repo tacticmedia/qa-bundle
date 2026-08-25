@@ -5,10 +5,10 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * Reads the screenshot tree the journeys write
- * ({@see \TacticMedia\QaBundle\Test\JourneyScreenshots}). The basename carries
- * the capture's origin - test class, method, capture sequence and screen label -
- * and the .json sidecar beside each PNG carries the captured page
+ * Reads the screenshot tree that the journeys write
+ * ({@see \TacticMedia\QaBundle\Test\JourneyScreenshots}). The basename gives the
+ * origin of the capture: test class, method, capture sequence and screen label.
+ * The .json sidecar beside each PNG gives the state of the captured page
  * ({@see ScreenMetadata}).
  *
  * Modes and viewports are whatever the tree holds, so a journey that captures a
@@ -21,7 +21,7 @@ final readonly class ScreenshotCatalog
     private const ORIENTATIONS = ['portrait', 'landscape'];
     private const BASENAME = '/^(?<class>\w+)-(?<method>\w+)-(?<sequence>\d{3})_(?<label>[A-Za-z0-9 _-]+)$/';
 
-    /** Enough to show the shape of the problem without turning the page into a log. */
+    /** Enough entries to show the type of problem, without a full log on the page. */
     private const IGNORED_CAP = 20;
 
     public function __construct(
@@ -78,7 +78,7 @@ final readonly class ScreenshotCatalog
     }
 
     /**
-     * What the reader passed over inside one group.
+     * The entries that the reader ignored in one group.
      */
     public function ignored(string $mode, string $viewport): IgnoredCaptures
     {
@@ -86,9 +86,9 @@ final readonly class ScreenshotCatalog
     }
 
     /**
-     * What the reader passed over anywhere under the root. This is what an empty
-     * page has to show: a producer whose output does not match the contract
-     * otherwise gets no groups and no explanation.
+     * The entries that the reader ignored under the root. The empty page shows
+     * these, because a producer whose output does not match the contract otherwise
+     * gets no groups and no explanation.
      */
     public function allIgnored(): IgnoredCaptures
     {
@@ -107,8 +107,8 @@ final readonly class ScreenshotCatalog
     }
 
     /**
-     * The origin encoded in a basename, whether or not the file still exists - a
-     * re-run replaces the tree, and stale feedback must still name its test.
+     * The origin that a basename encodes, whether or not the file still exists. A
+     * re-run replaces the tree, and an old note must still give its test.
      */
     public function describe(string $name): ?CapturedScreen
     {
@@ -137,8 +137,8 @@ final readonly class ScreenshotCatalog
     }
 
     /**
-     * The capture as the prompt should print it: relative to the project when it
-     * sits inside it, so an agent can open the path it reads.
+     * The path of the capture for the prompt. It is relative to the project when
+     * the capture is inside the project, so that an agent can open it.
      */
     public function displayPath(string $mode, string $viewport, string $name): ?string
     {
@@ -160,8 +160,8 @@ final readonly class ScreenshotCatalog
     }
 
     /**
-     * Everywhere the reviewer can step from $name: along its own group, and across
-     * to the same screen in the adjacent groups. Both axes wrap.
+     * The targets that the reviewer can move to from $name: the screens in its own
+     * group, and the same screen in the adjacent groups. Both axes are circular.
      *
      * @throws \InvalidArgumentException when $mode/$viewport is not a group, or holds no capture named $name
      */
@@ -191,8 +191,9 @@ final readonly class ScreenshotCatalog
     }
 
     /**
-     * Walks the same three levels {@see discover()} does, keeping what that one
-     * drops. Hidden files are never captures, so they are not reported.
+     * Reads the same three levels as {@see discover()} and keeps the entries that
+     * {@see discover()} removes. A hidden file is never a capture, so this method
+     * does not report one.
      */
     private function collect(?string $onlyMode, ?string $onlyViewport): IgnoredCaptures
     {
@@ -246,8 +247,8 @@ final readonly class ScreenshotCatalog
     }
 
     /**
-     * Everything in one orientation directory that is not half of a readable
-     * PNG/sidecar pair.
+     * Each entry in one orientation directory that is not part of a readable
+     * PNG and sidecar pair.
      *
      * @return list<IgnoredCapture>
      */
@@ -305,8 +306,9 @@ final readonly class ScreenshotCatalog
     }
 
     /**
-     * Every <mode>/<WxH>/<orientation> directory under the root, modes
-     * lexicographic and viewports ascending by width then height.
+     * Each <mode>/<WxH>/<orientation> directory under the root. Modes are in
+     * lexicographic order and viewports are in ascending order by width, then by
+     * height.
      *
      * @return list<array{string, string, string}>
      */

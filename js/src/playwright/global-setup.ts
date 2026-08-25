@@ -5,9 +5,10 @@ import { resolveRoot } from '../capture/paths.js';
 import type { QaScreenshotsOptions } from '../capture/types.js';
 
 /**
- * The tree holds one run, so it is emptied before any worker starts - the only
- * point that is safe with parallel workers. A root set with test.use() inside a
- * spec is invisible here: set it in the config or in QA_SCREENSHOTS_DIR.
+ * The tree holds one run, so this setup empties it before the first worker
+ * starts, which is the only safe point when workers run in parallel. This setup
+ * does not read a root that test.use() sets in a spec: set the root in the
+ * Playwright configuration or in QA_SCREENSHOTS_DIR.
  */
 export default async function globalSetup(config: FullConfig): Promise<void> {
     const roots = new Set<string>();

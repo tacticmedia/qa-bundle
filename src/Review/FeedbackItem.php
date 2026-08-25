@@ -7,9 +7,9 @@ namespace TacticMedia\QaBundle\Review;
 use Symfony\Component\Uid\Uuid;
 
 /**
- * One note left on a screenshot, optionally bound to a rectangle. The rectangle
- * and the image size are in natural image pixels, so a note keeps its meaning
- * whatever width the review page renders the screenshot at.
+ * One note on a screenshot, with an optional rectangle. The rectangle and the
+ * image size are in natural image pixels, so a note stays correct at each width
+ * the review page renders the screenshot at.
  */
 final class FeedbackItem
 {

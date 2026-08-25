@@ -10,21 +10,22 @@ use PHPUnit\Framework\Attributes\Before;
 use Symfony\Component\Panther\Client;
 
 /**
- * Full-page screenshots of every screen a journey settles on, per viewport and
- * color scheme:
+ * Full-page screenshots of each screen that a journey settles on, for each
+ * viewport and colour scheme:
  * <root>/<mode>/<WxH>/<orientation>/<TestCase>-<testMethod>-<NNN>_<label>.png,
- * where NNN is the capture's position in the journey. Each PNG gets a .json
- * sidecar of the same basename holding the page URL, title, element geometry and
- * the test the capture came from, which the review tool resolves annotations
- * against ({@see \TacticMedia\QaBundle\Review\ScreenMetadata}). The tree is
- * emptied at the start of each run, so it only ever holds the latest one. Use
- * the trait once, on a shared journey base class: the clear-once guard is a
- * trait static, which PHP copies into every class that uses the trait directly,
- * so a second using class would re-empty the tree mid-run.
+ * where NNN is the position of the capture in the scenario. Each PNG has a .json
+ * sidecar with the same basename. The sidecar holds the page URL, the title, the
+ * element geometry and the test that produced the capture, and the review tool
+ * matches annotations against it
+ * ({@see \TacticMedia\QaBundle\Review\ScreenMetadata}). Each run empties the
+ * tree, so the tree holds the latest run only. Use the trait once, on a shared
+ * journey base class: the clear-once guard is a trait static, which PHP copies
+ * into each class that uses the trait directly, so a second such class empties
+ * the tree again during the run.
  *
- * The trait carries no container: the root comes from QA_SCREENSHOTS_DIR or
- * defaults to var/screenshots under the working directory, and viewports and
- * colour schemes are protected static methods a test case overrides.
+ * The trait does not use the container. The root comes from QA_SCREENSHOTS_DIR,
+ * or from var/screenshots under the working directory. Viewports and colour
+ * schemes are protected static methods that a test case overrides.
  */
 trait JourneyScreenshots
 {
@@ -92,13 +93,13 @@ trait JourneyScreenshots
     }
 
     /**
-     * Full-page PNGs, one per viewport and emulated color scheme, via the
-     * chromedriver CDP endpoint.
+     * Full-page PNGs, one for each viewport and emulated colour scheme, through
+     * the chromedriver CDP endpoint.
      *
-     * A stage already captured in this test is skipped, so a journey helper
-     * called more than once shoots its screen once and a deliberate label reuse
-     * suppresses a known repeat. A capture failure fails the journey - a
-     * silently missing screenshot defeats the point of taking them.
+     * The method skips a stage already captured in this test, so a journey helper
+     * that is called more than once captures its screen once, and a repeated label
+     * suppresses a known repeat. A capture failure fails the journey, because a
+     * missing screenshot with no message removes the value of the capture.
      */
     protected function captureFullPageScreenshot(Client $client, string $stage): void
     {
@@ -117,8 +118,8 @@ trait JourneyScreenshots
                 $this->captureViewport($devtools, $viewport, $prefix.'_'.$this->fileSafe($stage));
             }
         } finally {
-            // The journey keeps running with the real viewport and scheme,
-            // even when a capture failed halfway.
+            // The journey continues with the correct viewport and scheme, including
+            // after a capture failed.
             try {
                 $devtools->execute('Emulation.clearDeviceMetricsOverride');
                 $this->emulateColorScheme($devtools, '');
@@ -128,10 +129,11 @@ trait JourneyScreenshots
     }
 
     /**
-     * The document height only exists at the device width, so the layout is
-     * measured there first and the viewport then grown to fit the whole page -
-     * captureBeyondViewport alone can return a viewport-sized image. One
-     * re-measure after growing, because vh-sized elements grow along.
+     * The document height is only known at the device width, so the method
+     * measures the layout there and then increases the viewport to the height of
+     * the complete page. captureBeyondViewport on its own can return an image the
+     * size of the viewport. The method measures a second time after the increase,
+     * because vh-sized elements increase with the viewport.
      *
      * @param array{width: int, height: int} $viewport
      */
@@ -156,7 +158,7 @@ trait JourneyScreenshots
             ],
         ];
 
-        // Every mode shares this layout, so one measurement covers them all.
+        // Each mode uses this layout, so one measurement is sufficient for all of them.
         $metadata = $this->captureMetadata($devtools, $stage, $viewport['width'], $height);
         $orientation = $viewport['height'] >= $viewport['width'] ? 'portrait' : 'landscape';
 
@@ -170,9 +172,8 @@ trait JourneyScreenshots
                 $orientation,
             );
 
-            // A deleted bind-mount source leaves an unreadable stub here, and is the only
-            // condition under which this produces no output yet still passes. Suppressed
-            // so the assertion reports the cause rather than a warning naming a path.
+            // A deleted bind-mount source leaves a directory that cannot be read. The warning
+            // is suppressed so that the failure message gives the cause and not a path.
             if (!is_dir($directory) && !@mkdir($directory, 0777, true)) {
                 self::fail(\sprintf('Could not create %s. Recreate the screenshot root and restart the service that owns it.', $directory));
             }
@@ -198,10 +199,10 @@ trait JourneyScreenshots
     }
 
     /**
-     * Boxes and identities of the elements worth naming, in page pixels. The
-     * JavaScript capture package reads the same file, so it lives on disk rather
-     * than inline here. It must stay an expression: both producers evaluate it
-     * for its value.
+     * Boxes and identities of the elements that the review reports, in page
+     * pixels. The JavaScript capture package reads the same file, so the script is
+     * on disk and not inline here. It must stay an expression, because both
+     * producers evaluate it for its value.
      */
     private static function metadataScript(): string
     {
@@ -218,14 +219,11 @@ trait JourneyScreenshots
     }
 
     /**
-     * A missing sidecar defeats the point of writing them, so a failed evaluation
-     * fails the journey, same posture as a failed screenshot.
+     * A missing sidecar removes the value of the capture, so a failed evaluation
+     * fails the journey, in the same way as a failed screenshot.
      *
-     * The page size is stamped from the capture clip rather than read from the
-     * page: when the re-measure above grows the document again, the viewport
-     * override still holds the previous height, so window.innerHeight comes back a
-     * few pixels short of the image. The resolver matches a stored rectangle
-     * against these numbers, so they have to be the PNG's exactly.
+     * The page size comes from the capture clip. The resolver matches a stored
+     * rectangle against these numbers, so they must equal the size of the PNG.
      */
     private function captureMetadata(ChromeDevToolsDriver $devtools, string $stage, int $width, int $height): string
     {
@@ -256,8 +254,8 @@ trait JourneyScreenshots
     }
 
     /**
-     * Where the journey lives, relative to the working directory when it sits
-     * under it, so the prompt names a path an agent can open.
+     * The path of the journey file, relative to the working directory when it is
+     * inside it, so that the prompt gives a path an agent can open.
      */
     private function testFile(): ?string
     {
@@ -273,7 +271,7 @@ trait JourneyScreenshots
     }
 
     /**
-     * A separator in a label would write into a directory that does not exist.
+     * A separator in a label would address a directory that does not exist.
      */
     private function fileSafe(string $stage): string
     {
@@ -281,12 +279,10 @@ trait JourneyScreenshots
     }
 
     /**
-     * Empties the tree so what is left is always the latest run and nothing has
-     * to be cleared by hand. The once-only guard is a trait static, so the
-     * guarantee is per using class: share one base class or the tree is
-     * re-emptied mid-run. The root itself survives - it is
-     * typically a bind-mount target, and deleting it leaves the container with an
-     * unreadable stub until the service restarts.
+     * Empties the tree, so that it holds the latest run and needs no manual
+     * removal. The root directory stays, because it is usually a bind-mount
+     * target. If it is deleted, the container cannot read it until the service
+     * restarts.
      */
     private function clearScreenshots(): void
     {
@@ -327,7 +323,7 @@ trait JourneyScreenshots
     }
 
     /**
-     * Emulates prefers-color-scheme; an empty value clears the emulation.
+     * An empty value clears the emulation.
      */
     private function emulateColorScheme(ChromeDevToolsDriver $devtools, string $value): void
     {

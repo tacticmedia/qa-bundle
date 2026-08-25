@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Review;
 
 /**
- * Why the catalog passed an entry over. The review page turns these tokens into
- * words; nothing here is user-facing text.
+ * The reason the catalog ignored an entry. The review page converts these tokens
+ * into text. No value here is user-facing text.
  */
 enum IgnoredReason: string
 {

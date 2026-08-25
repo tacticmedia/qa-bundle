@@ -22,7 +22,7 @@
             <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {% for screen in screens %}
                     {% set notes = counts_by_screen[screen.name] ?? 0 %}
-                    {# Escape on the annotate page returns to this anchor, so the card it lands on is highlighted. #}
+                    {# Escape on the annotate page returns to this anchor, and the review highlights the card. #}
                     <a id="{{ screen.anchor }}"
                        href="{{ path('qa_screenshots_annotate', {mode, viewport, name: screen.name}) }}"
                        class="group flex scroll-mt-24 flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-xs hover:border-amber-500 data-anchored:border-amber-500 data-anchored:ring-2 data-anchored:ring-amber-500 dark:border-white/10 dark:bg-white/5 dark:hover:border-amber-400 dark:data-anchored:border-amber-400 dark:data-anchored:ring-amber-400">
