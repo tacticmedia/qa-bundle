@@ -12,7 +12,7 @@ return static function (DefinitionConfigurator $definition): void {
                 ->defaultValue('%kernel.project_dir%/var/screenshots')
             ->end()
             ->scalarNode('review_dir')
-                ->info('Review notes and the crops the prompt points at. Never inside screenshots_dir, which every run empties.')
+                ->info('Review notes and the crops the prompt refers to. Never inside screenshots_dir, which every run empties.')
                 ->defaultValue('%kernel.project_dir%/var/review')
             ->end()
         ->end();

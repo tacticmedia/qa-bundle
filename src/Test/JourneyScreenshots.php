@@ -14,11 +14,11 @@ use Symfony\Component\Panther\Client;
  * viewport and colour scheme:
  * <root>/<mode>/<WxH>/<orientation>/<TestCase>-<testMethod>-<NNN>_<label>.png,
  * where NNN is the position of the capture in the scenario. Each PNG has a .json
- * sidecar with the same basename. The sidecar holds the page URL, the title, the
+ * sidecar with the same basename. The sidecar contains the page URL, the title, the
  * element geometry and the test that produced the capture, and the review tool
  * matches annotations against it
  * ({@see \TacticMedia\QaBundle\Review\ScreenMetadata}). Each run empties the
- * tree, so the tree holds the latest run only. Use the trait once, on a shared
+ * tree, so the tree contains the latest run only. Use the trait once, on a shared
  * journey base class: the clear-once guard is a trait static, which PHP copies
  * into each class that uses the trait directly, so a second such class empties
  * the tree again during the run.
@@ -40,12 +40,11 @@ trait JourneyScreenshots
     /**
      * @var list<string>
      */
-    private array $capturedStages = [];
+    private array $capturedLabels = [];
 
     /**
      * iPhone portrait, iPad portrait and landscape, common desktop, high-end
-     * laptop (MacBook Pro 16 logical resolution). CSS pixels; the orientation
-     * directory follows from the shape.
+     * laptop. CSS pixels; the orientation directory follows from the shape.
      *
      * @return list<array{width: int, height: int}>
      */
@@ -86,9 +85,9 @@ trait JourneyScreenshots
         }
 
         $this->screenshotSequence = 0;
-        $this->capturedStages = [];
-        // name() is PHPUnit-internal but the only source of the running test's
-        // method name.
+        $this->capturedLabels = [];
+        // name() and nameWithDataSet() are both PHPUnit-internal; name() keeps the
+        // scenario at the method name across data sets.
         $this->screenshotSlug = substr((string) strrchr(static::class, '\\'), 1).'-'.$this->name(); // @phpstan-ignore method.internal
     }
 
@@ -96,26 +95,26 @@ trait JourneyScreenshots
      * Full-page PNGs, one for each viewport and emulated colour scheme, through
      * the chromedriver CDP endpoint.
      *
-     * The method skips a stage already captured in this test, so a journey helper
+     * The method skips a label already captured in this test, so a journey helper
      * that is called more than once captures its screen once, and a repeated label
      * suppresses a known repeat. A capture failure fails the journey, because a
      * missing screenshot with no message removes the value of the capture.
      */
-    protected function captureFullPageScreenshot(Client $client, string $stage): void
+    protected function captureFullPageScreenshot(Client $client, string $label): void
     {
         $driver = $client->getWebDriver();
 
-        if (!$driver instanceof RemoteWebDriver || \in_array($stage, $this->capturedStages, true)) {
+        if (!$driver instanceof RemoteWebDriver || \in_array($label, $this->capturedLabels, true)) {
             return;
         }
 
-        $this->capturedStages[] = $stage;
+        $this->capturedLabels[] = $label;
         $devtools = new ChromeDevToolsDriver($driver);
         $prefix = str_pad((string) ++$this->screenshotSequence, 3, '0', \STR_PAD_LEFT);
 
         try {
             foreach (static::screenshotViewports() as $viewport) {
-                $this->captureViewport($devtools, $viewport, $prefix.'_'.$this->fileSafe($stage));
+                $this->captureViewport($devtools, $viewport, $prefix.'_'.$this->fileSafe($label));
             }
         } finally {
             // The journey continues with the correct viewport and scheme, including
@@ -131,9 +130,9 @@ trait JourneyScreenshots
     /**
      * The document height is only known at the device width, so the method
      * measures the layout there and then increases the viewport to the height of
-     * the complete page. captureBeyondViewport on its own can return an image the
-     * size of the viewport. The method measures a second time after the increase,
-     * because vh-sized elements increase with the viewport.
+     * the complete page, which is also the clip height. The method measures a
+     * second time after the increase, because vh-sized elements increase with the
+     * viewport.
      *
      * @param array{width: int, height: int} $viewport
      */
@@ -172,10 +171,9 @@ trait JourneyScreenshots
                 $orientation,
             );
 
-            // A deleted bind-mount source leaves a directory that cannot be read. The warning
-            // is suppressed so that the failure message gives the cause and not a path.
+            // The warning is suppressed so that the failure message is the only output.
             if (!is_dir($directory) && !@mkdir($directory, 0777, true)) {
-                self::fail(\sprintf('Could not create %s. Recreate the screenshot root and restart the service that owns it.', $directory));
+                self::fail(\sprintf('Could not create %s.', $directory));
             }
 
             $this->emulateColorScheme($devtools, $mode);
@@ -273,16 +271,15 @@ trait JourneyScreenshots
     /**
      * A separator in a label would address a directory that does not exist.
      */
-    private function fileSafe(string $stage): string
+    private function fileSafe(string $label): string
     {
-        return (string) preg_replace('/[^A-Za-z0-9 _-]+/', '-', $stage);
+        return (string) preg_replace('/[^A-Za-z0-9 _-]+/', '-', $label);
     }
 
     /**
-     * Empties the tree, so that it holds the latest run and needs no manual
+     * Empties the tree, so that it contains the latest run and needs no manual
      * removal. The root directory stays, because it is usually a bind-mount
-     * target. If it is deleted, the container cannot read it until the service
-     * restarts.
+     * target.
      */
     private function clearScreenshots(): void
     {

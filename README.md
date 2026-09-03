@@ -6,20 +6,20 @@
 
 ## TL;DR
 
-Sometimes a broken page doesn't cause an error that can be captured by a machine. A heading that
-overlaps a badge; a table that loses its right gutter at one breakpoint; text with too little
-contrast in dark mode, and so on. Every assertion passes, and yet the user experience is bad.
+A broken page does not always cause an error that a machine can capture. Examples: a heading that
+overlaps a badge, a table that loses its right gutter at one breakpoint, text with too little
+contrast in dark mode. Every assertion passes, and the user experience is still bad.
 
-Only a person finds those defects, and that person's job is not easy: if you're testing 10 pages for
-four different resolutions, two different rendering engines and both dark and light mode, it's 160
-screens to review, every single time. How will you scale it to 100 pages?
+Only a person finds those defects, and the work is large: 10 pages at four resolutions, in two
+rendering engines and in dark and light mode, are 160 screens to review on each run, and the count
+grows with each page you add.
 
-This bundle is meant to ease the pain: Use the trait to capture all the screenshots and metadata at
-the points that matter to you, and use the UI to review and annotate all screens. Once you're done,
-generate a prompt for your favourite agent and let the computer compute.
+This bundle reduces that work: use the trait to capture all the screenshots and metadata at the
+points that matter to you, and use the UI to review and annotate all screens. When the review is
+complete, generate a prompt for a coding agent.
 
 <details>
-  <summary>▶️ <b>Click to see it in action</b></summary>
+  <summary><b>Click to see a demonstration</b></summary>
   <br>
   <img src="docs/assets/tacticmedia.webp" alt="Demo Animation" width="100%">
 </details>
@@ -43,8 +43,6 @@ shape, specified in [docs/screenshot-sets.md](docs/screenshot-sets.md) with a JS
 [docs/sidecar.schema.json](docs/sidecar.schema.json). The review page reads the output of any tool
 that writes that layout.
 
-Why is that important? This bundle doesn't dictate how you'll create the screenshots.
-
 ## Requirements to run the UI
 
 PHP 8.2 or later, `ext-gd`, and Symfony 6.4, 7.4, or 8.1 and later.
@@ -58,7 +56,12 @@ composer require --dev tacticmedia/qa-bundle symfony/panther
 Only the capture trait uses `symfony/panther`, so the bundle lists it as a suggestion and not as a
 dependency. A project that needs the review page only can omit it.
 
-The Flex recipe writes the next two files. Where the host declines it, write them yourself.
+The bundle requires `symfony/security-csrf`. On a host that has no other dependency on that
+package, a `--dev` install makes it dev-only, FrameworkBundle then leaves CSRF protection off, and
+the review page does not render. [docs/csrf.md](docs/csrf.md) gives the setting.
+
+The Flex recipe writes the next two files. If the host does not install the recipe, write them
+yourself.
 
 Enable the bundle for `dev` and `test`, in `config/bundles.php`:
 
@@ -75,10 +78,12 @@ when@dev:
         type: php
 ```
 
-The bundle must be registered wherever `assets/controllers.json` names it, which is every
-environment. A host without the line gets `Could not find an asset mapper path that points to the
-"annotate" controller`. Install with `--no-scripts` and add the line first, or see
-[docs/host-setup.md](docs/host-setup.md#the-bundle-and-controllersjson-must-agree).
+The bundle must be registered in every environment whose container is built while
+`assets/controllers.json` names it, and Composer writes that file for every environment. A host
+without the line fails with `Could not find an asset mapper path that points to the "annotate"
+controller`. [docs/host-setup.md](docs/host-setup.md#the-bundle-and-controllersjson-must-agree)
+describes the two host states that satisfy this, and the `--no-scripts` sequence for a host that
+has no recipe.
 
 Use the trait once, on your journey base class:
 
@@ -109,27 +114,25 @@ to a key. [docs/host-setup.md](docs/host-setup.md) gives the block and the rest 
 | [docs/how-it-works.md](docs/how-it-works.md) | The design: measurement, the sidecar, the basename, selection resolution, crops, notes. |
 | [docs/without-php.md](docs/without-php.md) | Capture from Playwright and review in a container. |
 | [docs/screenshot-sets.md](docs/screenshot-sets.md) | The on-disk contract between producers and the review, with [sidecar.schema.json](docs/sidecar.schema.json). |
-| [docs/development.md](docs/development.md) | Test gates, CI legs, the npm package, the review image, the demo. |
+| [docs/development.md](docs/development.md) | Test commands, CI matrix jobs, the npm package, the review image, the demo. |
 | [js/README.md](js/README.md) | `@tacticmedia/qa-capture`, the Playwright producer. |
 | [docker/review/README.md](docker/review/README.md) | `ghcr.io/tacticmedia/qa-review`, the review image. |
 | [demo/README.md](demo/README.md) | A Symfony 8.1 host that runs both producers and the container. |
 
 ## Contributions
 
-Non-LLM-slop contributions and issues are most definitely welcome.
+Contributions and issues that are not LLM slop are welcome.
 
 ## License
 
 MIT. See [LICENSE](LICENSE).
 
-## One more thing
+## About Tactic Media
 
-This package is brought to you by [Tactic Media, a South Australian software development
-business](https://tacticmedia.com.au).
+[Tactic Media, a South Australian software development business](https://tacticmedia.com.au),
+maintains this package.
 
-We love to help businesses become more efficient by automating tasks that shouldn't have been done
-by a human in the first place.
+We help businesses become more efficient by automating tasks that a human should not have to do.
 
-Head over to our website to check out what we do, and if you think we can help you give your
-employees more time to spend on something more creative,
-[let's talk](https://tacticmedia.com.au/contact.html).
+Visit our website to see what we do. If you think we can help your employees spend more time on
+creative work, [contact us](https://tacticmedia.com.au/contact.html).

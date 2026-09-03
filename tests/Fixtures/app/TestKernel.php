@@ -20,8 +20,8 @@ use TacticMedia\QaBundle\TacticMediaQaBundle;
 use function Symfony\Component\DependencyInjection\Loader\Configurator\service;
 
 /**
- * The smallest host the review page can run in. No SecurityBundle: the page
- * authenticates nothing, and `security.csrf.token_manager` is FrameworkBundle's,
+ * The smallest host that can run the review page. It has no SecurityBundle: the
+ * page has no authentication, and `security.csrf.token_manager` is FrameworkBundle's,
  * registered from framework.csrf_protection with symfony/security-csrf installed.
  */
 final class TestKernel extends Kernel
@@ -65,9 +65,9 @@ final class TestKernel extends Kernel
 
         // TwigBundle loads these two only when ContainerBuilder::willBeAvailable() reports
         // symfony/asset-mapper as a non-dev dependency of the root package. Here it is a dev
-        // dependency, so the check correctly says no and importmap() is never registered. A real
-        // AssetMapper host requires the package directly and gets them from TwigBundle; this
-        // fixture declares them to be that host.
+        // dependency, so the check reports it as unavailable and importmap() is not registered. A
+        // real AssetMapper host requires the package directly and receives them from TwigBundle;
+        // this fixture declares them itself to act as that host.
         $services->set('twig.runtime.importmap', ImportMapRuntime::class)
             ->args([service('asset_mapper.importmap.renderer')])
             ->tag('twig.runtime');

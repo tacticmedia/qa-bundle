@@ -16,8 +16,8 @@ use TacticMedia\QaBundle\Tests\ScreenshotFixtures;
  * the annotate page, the raw image, and the note round trip through FeedbackStore.
  *
  * Every write carries the token the page rendered and a same-origin header, which
- * is the stateless CSRF contract the actions are declared under; a POST missing
- * either is answered with 403 rather than reaching the action.
+ * is the stateless CSRF contract the actions are declared under; a POST that proves
+ * neither receives 403 and does not reach the action.
  */
 final class ScreenshotReviewControllerTest extends WebTestCase
 {
@@ -59,7 +59,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'No screenshots yet');
     }
 
-    #[TestDox('An empty page names the files it could not read, so a foreign producer sees why')]
+    #[TestDox('An empty page names the files it could not read, so the author of a different producer can read the reason')]
     public function testTheEmptyStateReportsWhatItIgnored(): void
     {
         $this->removeFixtureTree();
@@ -93,7 +93,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'sidecar with no capture beside it');
     }
 
-    #[TestDox('A long ignored list is capped, and the page says how much it is not showing')]
+    #[TestDox('A long ignored list is capped, and the page states the number of hidden entries')]
     public function testTheIgnoredListIsCappedOnThePage(): void
     {
         $directory = $this->fixtureScreenshotRoot().'/light/1920x1080/landscape';
@@ -110,7 +110,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'and 5 more');
     }
 
-    #[TestDox('An unreadable sidecar is called out on the page where it would have resolved elements')]
+    #[TestDox('An unreadable sidecar is reported on the page where it would have resolved elements')]
     public function testTheAnnotatePageWarnsAboutAnUnreadableSidecar(): void
     {
         file_put_contents(
@@ -158,7 +158,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
-    #[TestDox('The annotate page carries the capture, its neighbours and the note form')]
+    #[TestDox('The annotate page contains the capture, its neighbours and the note form')]
     public function testTheAnnotatePageRenders(): void
     {
         $client = self::createClient();
@@ -173,7 +173,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertSelectorTextContains('body', 'Notes on this screen (0)');
     }
 
-    #[TestDox('A capture the tree does not hold is a 404')]
+    #[TestDox('A capture that is not in the tree is a 404')]
     public function testAnUnknownCaptureIsNotFound(): void
     {
         $client = self::createClient();
@@ -200,7 +200,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_MODIFIED);
     }
 
-    #[TestDox('A traversing name never reaches the filesystem')]
+    #[TestDox('A name with path traversal never reaches the filesystem')]
     public function testTraversalIsRejected(): void
     {
         $client = self::createClient();
@@ -209,7 +209,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
-    #[TestDox('A whole-screen note is stored and drawn back on the annotate page')]
+    #[TestDox('A whole-screen note is stored and shown on the annotate page')]
     public function testAWholeScreenNoteRoundTrips(): void
     {
         $client = self::createClient();
@@ -280,7 +280,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertSame('840', $crawler->filter('[data-qa-annotate-target="x"]')->attr('value'));
     }
 
-    #[TestDox('A note on a capture that is not there is a 404')]
+    #[TestDox('A note on a capture that does not exist is a 404')]
     public function testANoteOnAnUnknownCaptureIsRejected(): void
     {
         $client = self::createClient();
@@ -292,9 +292,9 @@ final class ScreenshotReviewControllerTest extends WebTestCase
     }
 
     /**
-     * Neither proof of origin nor a token the page issued. A same-origin request
-     * carrying any long-enough value is accepted by design wherever the id is
-     * stateless, so corrupting the token alone would not test anything.
+     * The request has no proof of origin and no token that the page issued. Where
+     * the id is stateless, a same-origin request with any value of sufficient
+     * length is accepted by design, so a corrupted token alone tests nothing.
      */
     #[TestDox('A write proving neither same origin nor an issued token is rejected, and stores nothing')]
     public function testAnUnprovenWriteIsRejected(): void
@@ -364,7 +364,7 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertMatchesRegularExpression('#Cropped view \(selection outlined in red\): var/review/crops/[0-9a-f-]{36}\.png#', $prompt);
     }
 
-    #[TestDox('A note whose capture is gone is kept and flagged as stale')]
+    #[TestDox('A note whose capture no longer exists is kept and marked as stale')]
     public function testAStaleNoteSurvivesTheCaptureItDescribes(): void
     {
         $client = self::createClient();
@@ -417,8 +417,8 @@ final class ScreenshotReviewControllerTest extends WebTestCase
     }
 
     /**
-     * The value the page itself renders, so a change of token strategy shows up
-     * here rather than in a hand-written constant.
+     * The value that the page renders, so a change of token strategy appears here
+     * and not in a hand-written constant.
      */
     private function token(KernelBrowser $client): string
     {

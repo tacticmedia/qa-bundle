@@ -25,8 +25,8 @@ use TacticMedia\QaBundle\Review\SelectionResolver;
  * Shows the screenshots that the journeys wrote and collects visual feedback on
  * them. The prompt action converts that feedback into instructions for an agent.
  *
- * The routes exist only where the host imports config/routes.php, which belongs
- * under `when@dev`. The host sends /_dev through its dev firewall. On Symfony 7.2
+ * The routes exist only where the host imports the controller, typically
+ * config/routes.php under `when@dev`. The host sends /_dev through its dev firewall. On Symfony 7.2
  * and later the bundle registers the CSRF token id as stateless. Below 7.2 the
  * token is session-backed and the firewall must permit a session.
  */

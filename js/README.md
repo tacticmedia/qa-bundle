@@ -80,7 +80,7 @@ Playwright resolves a custom option through the generic parameter. Without it, `
 `QA_SCREENSHOTS_DIR` has precedence over `root` in each location, so the global setup and the
 fixture cannot empty one tree and write to a different tree.
 
-## What to know
+## Behaviour and limits
 
 - **The tree contains one run.** The global setup empties it before the first worker starts, which
   is the only safe point when workers run in parallel. If two producers write one root in one run,

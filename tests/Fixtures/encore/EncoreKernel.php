@@ -17,9 +17,11 @@ use Symfony\WebpackEncoreBundle\WebpackEncoreBundle;
 use TacticMedia\QaBundle\TacticMediaQaBundle;
 
 /**
- * A Webpack Encore host. `framework.asset_mapper` is off, so TwigBundle's ExtensionPass
- * drops twig.extension.importmap and the page renders with no importmap() function at all -
- * which is what the layout override in this host's templates/bundles/ has to survive.
+ * A Webpack Encore host. On a real Encore host `framework.asset_mapper` is off, so TwigBundle's
+ * ExtensionPass drops twig.extension.importmap; here TwigBundle never loads it, because
+ * symfony/asset-mapper is a dev dependency. In both cases the page renders with no importmap()
+ * function, which is the condition that the layout override in this host's templates/bundles/
+ * must handle.
  */
 final class EncoreKernel extends Kernel
 {

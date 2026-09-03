@@ -9,7 +9,8 @@ namespace TacticMedia\QaBundle\Review;
  * it in its own group, and the groups before and after that group in sidebar
  * order. Each axis is circular, so a step always gives a target. The screen in an
  * adjacent group is null when that group does not contain this capture, which
- * occurs after an interrupted run.
+ * occurs after an interrupted run or when a screen was captured at a subset of
+ * the viewports.
  */
 final readonly class ScreenNavigation
 {

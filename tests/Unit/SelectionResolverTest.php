@@ -11,8 +11,9 @@ use TacticMedia\QaBundle\Review\ScreenMetadata;
 use TacticMedia\QaBundle\Review\SelectionResolver;
 
 /**
- * A reviewer drags over what they see, not over one node, so the resolver has to
- * pick the distinct leaves out of the nested boxes the rectangle covers.
+ * A reviewer drags over a visible area and not over one node, so the resolver
+ * must select the distinct leaf elements from the nested boxes that the rectangle
+ * covers.
  */
 final class SelectionResolverTest extends TestCase
 {
@@ -61,7 +62,7 @@ final class SelectionResolverTest extends TestCase
         self::assertCount(5, $context->selected);
     }
 
-    #[TestDox('A rectangle over empty space falls back to whatever it clips')]
+    #[TestDox('A rectangle over empty space falls back to the elements it intersects')]
     public function testEmptySpaceFallsBackToIntersectingElements(): void
     {
         $context = (new SelectionResolver())->resolve(

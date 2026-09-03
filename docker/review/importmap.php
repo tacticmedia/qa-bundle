@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Turbo is load-bearing: the annotate controller navigates with visit().
+ * Turbo is required: the annotate controller navigates with visit().
  */
 return [
     'app' => ['path' => './assets/app.js', 'entrypoint' => true],

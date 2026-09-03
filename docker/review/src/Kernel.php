@@ -18,9 +18,9 @@ use TacticMedia\QaBundle\Controller\ScreenshotReviewController;
 use TacticMedia\QaBundle\TacticMediaQaBundle;
 
 /**
- * The review page and nothing else. Both trees come from the environment, so one
- * built image serves whatever is mounted at /data, and nothing about the paths is
- * baked into the compiled container.
+ * The review page and nothing else. Both trees are env() placeholders with compiled
+ * defaults under /data, so one built image serves the trees that are mounted there,
+ * and an override needs no rebuild.
  */
 final class Kernel extends BaseKernel
 {

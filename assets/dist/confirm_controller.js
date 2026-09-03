@@ -1,9 +1,9 @@
 import { Controller } from '@hotwired/stimulus';
 
 /*
- * Confirmation guard for destructive forms. Replaces inline onsubmit handlers,
- * which the strict CSP blocks (inline event-handler attributes would need
- * 'unsafe-inline'/'unsafe-hashes'; a nonce only whitelists <script> elements).
+ * Confirmation for destructive forms. It replaces inline onsubmit handlers, which
+ * a strict CSP blocks: inline event-handler attributes need 'unsafe-inline' or
+ * 'unsafe-hashes', and a nonce permits <script> elements only.
  *
  * Usage (always via the Twig helpers, never hand-written data-* attributes):
  *   <form {{ stimulus_controller('qa-confirm', {message: 'Delete this thing?'})

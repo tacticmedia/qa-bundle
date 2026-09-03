@@ -1,12 +1,12 @@
-# The review page as a container, so a project with no PHP toolchain can still
-# read its screenshot sets. Capture never runs here: browsers live on the host.
+# The review page as a container, so a project with no PHP toolchain can read
+# its screenshot sets. Capture does not run here; the browsers are on the host.
 FROM dunglas/frankenphp:1-php8.4-alpine
 
 RUN install-php-extensions gd @composer \
     && apk add --no-cache curl
 
-# The base image points Caddy's data directory at /data, which is where the
-# reviewed project is mounted. Move Caddy out of the way.
+# The base image sets Caddy's data directory to /data, which is where the
+# reviewed project is mounted. Set the Caddy directories elsewhere.
 ENV XDG_DATA_HOME=/home/app/.local/share \
     XDG_CONFIG_HOME=/home/app/.config
 
@@ -15,8 +15,8 @@ RUN addgroup -g 1000 app \
     && mkdir -p /data/var/screenshots /data/var/review "$XDG_DATA_HOME" "$XDG_CONFIG_HOME" \
     && chmod -R a+rwX /data /home/app
 
-# The layout mirrors the repository so the ../.. path repository in
-# docker/review/composer.json resolves exactly as it does on a developer's disk.
+# The layout is the same as the repository, so the ../.. path repository in
+# docker/review/composer.json resolves to the same location as on a developer machine.
 WORKDIR /app/docker/review
 
 COPY composer.json /app/composer.json

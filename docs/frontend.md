@@ -63,14 +63,14 @@ is on Encore or AssetMapper.
 ## Styling
 
 The default layout of the bundle loads Tailwind from a CDN and contains no compiled CSS. A strict
-content security policy blocks that script, so override the layout with your own shell:
+content security policy blocks that script, so override the layout with your own:
 
 ```
 templates/bundles/TacticMediaQaBundle/layout.html.twig
 ```
 
 The blocks meant for that are `title`, `brand`, `styles`, `scripts` and `sidebar`; page content
-arrives in `review_content`. `brand` sits inside `sidebar`, so an override of `sidebar` replaces it
+arrives in `review_content`. `brand` is inside `sidebar`, so an override of `sidebar` replaces it
 too.
 
 ```twig
@@ -84,7 +84,7 @@ too.
 `asset()` comes from `symfony/asset`, which AssetMapper does not require. Install it where the
 override needs it.
 
-If your Tailwind build should pick up the bundle's own markup, add its templates as a source. A
+To include the markup of the bundle in your Tailwind build, add its templates as a source. A
 `vendor/` directory in your `.gitignore` does not hide them: gitignore filtering applies only to
 Tailwind's automatic detection, and an explicit `@source` is always scanned.
 
@@ -99,6 +99,10 @@ Tailwind's automatic detection, and an explicit `@source` is always scanned.
 The annotate controller sets the overlay geometry through the CSSOM, which `style-src` does not
 control, so the selection needs no change to the policy. The default `scripts` block writes an
 inline importmap and an inline module script: give them a nonce through
-`framework.asset_mapper.importmap_script_attributes`, or override the block. The default `styles`
-block loads Tailwind from a CDN, which needs `script-src https://cdn.jsdelivr.net` unless you also
-override it.
+`framework.asset_mapper.importmap_script_attributes`, or override the block. The importmap also
+emits an inline loader for the es-module-shims polyfill from `https://ga.jspm.io`: allow that host
+in `script-src`, add `es-module-shims` to `importmap.php`, or set
+`framework.asset_mapper.importmap_polyfill: false`. The default `styles` block loads Tailwind from
+a CDN, which needs `script-src https://cdn.jsdelivr.net`, and the browser build injects a `style`
+element at run time, so a policy that restricts `style-src` needs `'unsafe-inline'` for it, unless
+you also override the block.

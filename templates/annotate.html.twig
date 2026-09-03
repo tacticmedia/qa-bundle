@@ -45,7 +45,7 @@
 
     {% if metadata_missing|default(false) %}
         <p class="mb-6 rounded-lg border border-amber-300 bg-amber-50 p-4 text-sm text-amber-900 dark:border-amber-400/30 dark:bg-amber-400/10 dark:text-amber-200">
-            This capture has no readable sidecar, so a note on it carries coordinates but names no
+            This capture has no readable sidecar, so a note on it contains coordinates but names no
             elements. Check the .json file beside the image against docs/screenshot-sets.md.
         </p>
     {% endif %}
@@ -120,7 +120,7 @@
 
                 <h2 class="text-sm font-semibold text-gray-900 dark:text-slate-200">Add a note</h2>
                 <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
-                    Drag on the screenshot to pick an area, or just write to note the whole screen.
+                    Drag on the screenshot to select an area, or write a note with no selection to note the whole screen.
                 </p>
 
                 <p class="mt-3 flex items-center justify-between gap-2 text-xs">
@@ -146,7 +146,7 @@
             </h2>
 
             {% if notes is empty %}
-                {{ ui.empty_state('Nothing noted yet', 'No feedback on this screen yet. Drag over what is wrong and write a note.') }}
+                {{ ui.empty_state('Nothing noted yet', 'No feedback on this screen yet. Drag over the incorrect area and write a note.') }}
             {% else %}
                 <ul role="list" class="mt-3 space-y-3">
                     {% for note in notes %}

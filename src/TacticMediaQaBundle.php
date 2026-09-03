@@ -18,8 +18,10 @@ use TacticMedia\QaBundle\Controller\ScreenshotReviewController;
  * ({@see Test\JourneyScreenshots}) does not use them, because it runs in PHPUnit
  * with no container.
  *
- * The host selects the environment: enable the bundle for `dev` only in
+ * The host selects the environment: enable the bundle for `dev` and `test` in
  * config/bundles.php, and import config/routes.php under `when@dev`.
+ * docs/host-setup.md, "The bundle and controllers.json must agree", gives the
+ * reason `test` is required.
  */
 final class TacticMediaQaBundle extends AbstractBundle
 {
@@ -78,7 +80,7 @@ final class TacticMediaQaBundle extends AbstractBundle
         $review = rtrim((string) $parameters->resolveValue($reviewDir), '/').'/';
 
         if (str_starts_with($review, $screenshots)) {
-            throw new InvalidConfigurationException(\sprintf('qa.review_dir ("%s") sits inside qa.screenshots_dir ("%s"), which every journey run empties.', $reviewDir, $screenshotsDir));
+            throw new InvalidConfigurationException(\sprintf('qa.review_dir ("%s") is inside qa.screenshots_dir ("%s"), which every journey run empties.', $reviewDir, $screenshotsDir));
         }
     }
 

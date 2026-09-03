@@ -6,8 +6,8 @@ const here = dirname(fileURLToPath(import.meta.url));
 
 /**
  * Captures against the bundle's own fixture host, then reads the tree back. The
- * root is an environment variable so the PHP contract test can be pointed at the
- * same directory.
+ * root is an environment variable, so the PHP contract test can read the same
+ * directory.
  */
 const root = process.env.QA_SCREENSHOTS_DIR ?? resolve(here, 'test-results/screenshots');
 

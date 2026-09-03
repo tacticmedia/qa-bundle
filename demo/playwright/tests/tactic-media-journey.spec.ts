@@ -1,9 +1,9 @@
 import { test } from '@tacticmedia/qa-capture/playwright';
 
 /**
- * The Playwright twin of tests/E2e/TacticMediaJourneyE2eTest.php, stage for stage
- * and label for label. Both write the same tree, so switching producers yields
- * the same six screens in the review.
+ * The Playwright version of tests/E2e/TacticMediaJourneyE2eTest.php, with the same
+ * stages and labels. Both write the same tree, so a change of producer gives the
+ * same six screens in the review.
  */
 test('a visitor reads every page of the company site', async ({ page, qaScreenshots }) => {
     await page.goto('/');

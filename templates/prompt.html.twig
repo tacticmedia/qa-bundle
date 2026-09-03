@@ -10,7 +10,7 @@
 
 {% block page_subtitle %}
     <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
-        {{ feedback_total }} note{{ feedback_total == 1 ? '' : 's' }} across the review. Hand this to an agent as-is.
+        {{ feedback_total }} note{{ feedback_total == 1 ? '' : 's' }} across the review. Give this to an agent without changes.
     </p>
 {% endblock %}
 
@@ -25,7 +25,7 @@
 
 {% block review_content %}
     {% if feedback_total == 0 %}
-        {{ ui.empty_state('Nothing to report yet', 'Open a screenshot, drag over what is wrong and write a note. The prompt builds itself from your notes.') }}
+        {{ ui.empty_state('Nothing to report yet', 'Open a screenshot, drag over the incorrect area and write a note. The prompt is generated from your notes.') }}
     {% else %}
         <div {{ stimulus_controller('qa-clipboard') }}>
             <div class="mb-3 flex justify-end">

@@ -1,4 +1,4 @@
-# Defence in depth behind the Dockerfile's explicit COPY list.
+# A second filter behind the explicit COPY list of the Dockerfile.
 *
 !composer.json
 !src/

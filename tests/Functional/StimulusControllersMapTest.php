@@ -16,7 +16,7 @@ use Symfony\UX\StimulusBundle\AssetMapper\MappedControllerAsset;
  * and then against the registered AssetMapper paths. The only registration of
  * `assets/dist` is {@see \TacticMedia\QaBundle\TacticMediaQaBundle::prependExtension()},
  * which runs where the host has the bundle enabled. Where a `main` value, a controller
- * name or that registration moves, the host gets
+ * name or that registration changes, the host fails with
  * "Could not find an asset mapper path that points to the ... controller".
  */
 final class StimulusControllersMapTest extends KernelTestCase

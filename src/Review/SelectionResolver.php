@@ -71,7 +71,7 @@ final readonly class SelectionResolver
     }
 
     /**
-     * Gives the container that holds the selection, including a selection that
+     * Gives the container that contains the selection, including a selection that
      * covers no complete element.
      *
      * @param list<MetadataElement>                          $elements
@@ -91,8 +91,9 @@ final readonly class SelectionResolver
     }
 
     /**
-     * Smallest first. Removes each box that contains a box already selected, so
-     * the result gives the link and not the cell or the row that contains it.
+     * The input is sorted by area, smallest first. Removes each box that contains
+     * a box already selected, so the result gives the link and not the cell or the
+     * row that contains it.
      *
      * @param list<MetadataElement> $sorted
      *

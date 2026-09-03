@@ -19,9 +19,9 @@ use TacticMedia\QaBundle\Tests\ScreenshotFixtures;
 
 /**
  * The review page in a real browser: browse a group, note a whole screen, drag an
- * area and note that, edit, withdraw, read the generated prompt, and walk the run
- * from the keyboard. Everything here depends on the annotate Stimulus controller
- * and on the round trip through FeedbackStore, so only a real browser proves it.
+ * area and note that, edit, withdraw, read the generated prompt, and move through
+ * the run from the keyboard. Each step depends on the annotate Stimulus controller
+ * and on the round trip through FeedbackStore, so the test needs a real browser.
  */
 #[Group('e2e')]
 final class ScreenshotReviewE2eTest extends PantherTestCase
@@ -45,7 +45,7 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         return stage.getBoundingClientRect().width - image.getBoundingClientRect().width;
         MEASURE;
 
-    /** Largest edge the saved marker misses its recorded box by, in image pixels. */
+    /** The largest difference between an edge of the saved marker and its recorded box, in image pixels. */
     private const MARKER_DRIFT_SCRIPT = <<<'MEASURE'
         const image = document.querySelector('[data-qa-annotate-target="image"]');
         const marker = document.querySelector('[data-qa-annotate-target="marker"]:not([hidden])');
@@ -123,12 +123,12 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
             'The card opens the annotate page.',
         );
 
-        self::assertSame(0, $this->noteCount($client), 'A screen nobody reviewed yet carries no notes.');
+        self::assertSame(0, $this->noteCount($client), 'A screen that nobody has reviewed has no notes.');
         self::assertStringContainsString('No feedback on this screen yet.', $this->pageText($client));
     }
 
     /**
-     * Typing without dragging notes the screen as a whole.
+     * A note written without a drag applies to the whole screen.
      */
     private function noteTheWholeScreen(Client $client): void
     {
@@ -149,7 +149,7 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
 
     /**
      * Dragging over the screenshot fills the note form with the selected area in
-     * natural image pixels, and the saved note draws a marker back over it.
+     * natural image pixels, and the saved note renders a marker over the area.
      */
     private function noteADraggedArea(Client $client): void
     {
@@ -177,19 +177,19 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         $this->waitOrFail(
             $client,
             fn (): bool => 2 === $this->noteCount($client),
-            'The area note joins the list.',
+            'The area note is added to the list.',
         );
 
         self::assertStringContainsString('This heading overlaps the badge beside it.', $this->pageText($client));
         self::assertSame(
             1,
             $this->countElements($client, '[data-qa-annotate-target="marker"]:not([hidden])'),
-            'The area note is drawn back over the screenshot.',
+            'The area note is rendered over the screenshot.',
         );
     }
 
     /**
-     * Editing replaces the wording and leaves everything else alone.
+     * Editing replaces the wording and changes nothing else.
      */
     private function editTheFirstNote(Client $client): void
     {
@@ -203,7 +203,7 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
             'The edited wording replaces the original.',
         );
 
-        self::assertSame(2, $this->noteCount($client), 'Editing does not add or drop a note.');
+        self::assertSame(2, $this->noteCount($client), 'Editing does not add or remove a note.');
         self::assertStringNotContainsString('The dashboard cards are misaligned.', $this->pageText($client));
     }
 
@@ -211,14 +211,14 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
      * Drags a box across the middle of the screenshot.
      *
      * Panther's mouse wrapper rejects the null coordinates that clickAndHold() and
-     * release() pass for "stay where you are", so the drag is driven on the
+     * release() pass to keep the current position, so the drag runs on the
      * underlying driver. W3C pointer offsets are measured from the centre.
      */
     private function dragAcrossTheImage(Client $client): void
     {
         // Turbo renders a cached preview before the real response, so the element
-        // handle a drag holds can be replaced under it. Waiting for the final
-        // document and retrying once covers both halves of that swap.
+        // handle that a drag holds can be replaced during the drag. The wait for the
+        // final document and one retry cover both parts of that swap.
         $this->waitOrFail(
             $client,
             fn (): bool => (bool) $this->quietly(fn (): mixed => $client->executeScript(
@@ -226,7 +226,7 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
                 .'return !document.documentElement.hasAttribute("data-turbo-preview")'
                 .' && !!image && image.complete && 0 < image.naturalWidth;',
             )),
-            'The screenshot is laid out, so a drag over it lands on known pixels.',
+            'The screenshot is laid out, so a drag over it covers known pixels.',
         );
 
         $this->scrollIntoView($client, '[data-qa-annotate-target="image"]');
@@ -258,7 +258,7 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
     }
 
     /**
-     * The prompt carries enough for an agent to find the code behind the note.
+     * The prompt contains enough for an agent to find the code that the note refers to.
      */
     private function readTheGeneratedPrompt(Client $client): void
     {
@@ -281,7 +281,7 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         self::assertStringContainsString(
             \sprintf('var/screenshots/%s/%s/landscape/%s.png', self::MODE, self::VIEWPORT, self::SCREEN),
             $prompt,
-            'The prompt names the file the reviewer looked at.',
+            'The prompt names the file that the reviewer opened.',
         );
         self::assertStringContainsString(
             \sprintf('Page: %s ("%s")', self::PAGE_URL, self::PAGE_TITLE),
@@ -306,7 +306,7 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         $this->waitOrFail(
             $client,
             fn (): bool => 2 === $this->noteCount($client),
-            'Both notes survived the navigation.',
+            'Both notes are present after the navigation.',
         );
 
         foreach ([1, 0] as $remaining) {
@@ -321,20 +321,20 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         self::assertStringContainsString(
             'No feedback on this screen yet.',
             $this->pageText($client),
-            'The screen is back to its empty state.',
+            'The screen is in its empty state again.',
         );
         self::assertSame(
             0,
             $this->countElements($client, '[data-qa-annotate-target="marker"]:not([hidden])'),
-            'The withdrawn area is no longer drawn over the screenshot.',
+            'The withdrawn area is no longer rendered over the screenshot.',
         );
     }
 
     /**
      * A screenshot narrower than the stage is centred in it, and a wider one is
-     * scaled down, so an overlay measured against the stage lands nowhere near the
-     * pixels it describes. The saved marker has to cover exactly what was dragged,
-     * at whatever width the page renders the screenshot.
+     * scaled down, so an overlay measured against the stage is not at the pixels it
+     * describes. The saved marker must cover exactly the dragged area at each width
+     * the page renders the screenshot at.
      */
     private function theSavedAreaCoversWhatWasDragged(Client $client): void
     {
@@ -353,23 +353,23 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         $this->waitOrFail(
             $client,
             fn (): bool => 1 === $this->countElements($client, '[data-qa-annotate-target="marker"]:not([hidden])'),
-            'The saved area is drawn back over the screenshot.',
+            'The saved area is rendered over the screenshot.',
         );
 
         self::assertGreaterThan(
             0,
             (float) $client->executeScript(self::STAGE_SLACK_SCRIPT),
-            'The stage is wider than this capture, which is the condition the marker geometry has to survive.',
+            'The stage is wider than this capture, which is the condition that the marker geometry must handle.',
         );
         self::assertLessThanOrEqual(
             1.0,
             (float) $client->executeScript(self::MARKER_DRIFT_SCRIPT),
-            'The marker sits on the image pixels it records.',
+            'The marker is at the image pixels it records.',
         );
     }
 
     /**
-     * The grid's card anchors are the group's order, read off the page.
+     * The card anchors of the grid give the order of the group, read from the page.
      *
      * @return list<string> annotate paths, in the order the grid lists them
      */
@@ -387,15 +387,15 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
             'return [...document.querySelectorAll("a[id^=\'screen-\']")].map(card => card.getAttribute("href"))',
         );
 
-        self::assertIsArray($hrefs, 'Every card carries the anchor Escape returns to.');
-        self::assertGreaterThan(1, \count($hrefs), 'The group holds more than one capture to step between.');
+        self::assertIsArray($hrefs, 'Every card has the anchor that Escape returns to.');
+        self::assertGreaterThan(1, \count($hrefs), 'The group contains more than one capture to step between.');
 
         return array_values(array_map(strval(...), $hrefs));
     }
 
     /**
-     * Left and right walk the group and wrap at both ends, which is why the header
-     * buttons they mirror are never disabled.
+     * Left and right move through the group and wrap at both ends, so the header
+     * buttons that they mirror are never disabled.
      *
      * @param list<string> $order
      */
@@ -421,7 +421,7 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
     }
 
     /**
-     * Up and down keep the screen and swap the group, in sidebar order.
+     * Up and down keep the screen and change the group, in sidebar order.
      */
     private function upAndDownCarryTheScreenBetweenGroups(Client $client): void
     {
@@ -435,12 +435,12 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         $this->waitForPath($client, $above, 'Up opens the same screen in the group above.');
 
         $this->pressKey($client, WebDriverKeys::ARROW_DOWN);
-        $this->waitForPath($client, $here, 'Down carries the screen back.');
+        $this->waitForPath($client, $here, 'Down opens the same screen in the group below.');
     }
 
     /**
-     * A pending selection is the first thing Escape cancels, even though the drag
-     * ends with the focus in the note box.
+     * Escape cancels a pending selection first, although the drag ends with the
+     * focus in the note box.
      */
     private function escapeCancelsThePendingSelectionFirst(Client $client): void
     {
@@ -450,12 +450,12 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         $this->pressKeyWhereFocusIs($client, WebDriverKeys::ESCAPE);
 
         self::assertSame('', $this->fieldValue($client, 'width'), 'Escape cancels the selection.');
-        self::assertSame($url, $client->getCurrentURL(), 'Cancelling a selection is not leaving the page.');
+        self::assertSame($url, $client->getCurrentURL(), 'Cancelling a selection does not leave the page.');
     }
 
     /**
-     * Arrow keys move the caret while a note is being written, and Escape steps out
-     * of the field before it steps out of the page.
+     * Arrow keys move the caret while a note is being written, and Escape removes
+     * the focus from the field before it leaves the page.
      */
     private function theNoteBoxKeepsTheNavigationKeysToItself(Client $client): void
     {
@@ -472,15 +472,16 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
 
         $this->pressKeyWhereFocusIs($client, WebDriverKeys::ESCAPE);
 
-        self::assertSame($url, $client->getCurrentURL(), 'Escape leaves the note box before it leaves the page.');
-        self::assertSame('BODY', $this->activeElementTag($client), 'Escape releases the note box.');
-        self::assertSame('aXb', $this->fieldValue($client, 'note'), 'Escape keeps what was typed.');
+        self::assertSame($url, $client->getCurrentURL(), 'Escape removes the focus from the note box before it leaves the page.');
+        self::assertSame('BODY', $this->activeElementTag($client), 'Escape removes the focus from the note box.');
+        self::assertSame('aXb', $this->fieldValue($client, 'note'), 'Escape keeps the typed text.');
     }
 
     /**
-     * Saving from the keyboard goes through requestSubmit(), which is the event a
-     * host's double-submit listener rides on. A bypass would leave the POST
-     * silently rejected there, which shows up here as a note that never appears.
+     * A save from the keyboard uses requestSubmit(), which fires the submit event
+     * that the double-submit listener of a host needs. A bypass would cause the
+     * host to reject the POST with no message, which appears here as a note that
+     * is not saved.
      */
     private function commandEnterSavesTheNote(Client $client): void
     {
@@ -505,8 +506,8 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
     }
 
     /**
-     * With nothing left to cancel, Escape returns to the grid at the card just
-     * reviewed and highlights it.
+     * When nothing remains to cancel, Escape returns to the grid at the card that
+     * was reviewed and highlights it.
      */
     private function escapeReturnsToTheCardOnTheGrid(Client $client): void
     {
@@ -517,13 +518,13 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         $this->waitForPath(
             $client,
             \sprintf('/_dev/screenshots/%s/%s#%s', self::MODE, self::VIEWPORT, $anchor),
-            'Escape returns to the grid at the card just reviewed.',
+            'Escape returns to the grid at the card that was reviewed.',
         );
 
         $this->waitOrFail(
             $client,
             fn (): bool => $this->elementExists($client, \sprintf('[id="%s"][data-anchored]', $anchor)),
-            'The card landed on is the highlighted one.',
+            'The card that Escape returned to is highlighted.',
         );
     }
 
@@ -542,8 +543,8 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
     }
 
     /**
-     * With nothing focused the keydown lands on the body and reaches the window
-     * bindings, which is where a reviewer's hands are between notes.
+     * With no focused element the keydown goes to the body and reaches the window
+     * bindings, which is the state between notes.
      */
     private function pressKey(Client $client, string $keys): void
     {
@@ -554,11 +555,10 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
 
     /**
      * A W3C key action rather than sendKeys: sendKeys resolves the active element
-     * and types into that, which goes stale across a Turbo swap and is refused
-     * outright when the focus sits on the body. A key source carries no element, so
-     * it always reaches the document and bubbles to the window bindings.
-     * php-webdriver's own keyDown()/keyUp() wrappers only accept modifier keys, so
-     * the command is issued directly.
+     * and types into that, and the handle goes stale across a Turbo swap. A key
+     * source carries no element, so it always reaches the document and bubbles to
+     * the window bindings. WebDriverActions::keyDown()/keyUp() accept modifier keys
+     * only, so the command is issued directly.
      */
     private function pressKeyWhereFocusIs(Client $client, string $keys): void
     {

@@ -13,13 +13,13 @@ use Symfony\Component\DependencyInjection\ParameterBag\ParameterBag;
 use TacticMedia\QaBundle\TacticMediaQaBundle;
 
 /**
- * Notes and crops outlive the screenshot tree, which every journey run empties. That
- * only holds while the two directories are separate, so the bundle refuses a host
- * configuration where they are not.
+ * Notes and crops are kept after a journey run empties the screenshot tree. That
+ * holds only while the two directories are separate, so the bundle rejects a host
+ * configuration in which they are not.
  */
 final class BundleConfigurationTest extends TestCase
 {
-    #[TestDox('The default trees are siblings, and both land as parameters')]
+    #[TestDox('The default trees are siblings, and both become parameters')]
     public function testTheDefaultsAreAccepted(): void
     {
         $container = $this->load([]);
@@ -28,7 +28,7 @@ final class BundleConfigurationTest extends TestCase
         self::assertSame('%kernel.project_dir%/var/review', $container->getParameter('qa.review_dir'));
     }
 
-    #[TestDox('A review_dir inside screenshots_dir is refused before a run can empty it')]
+    #[TestDox('A review_dir inside screenshots_dir is rejected before a run can empty it')]
     public function testAReviewDirectoryInsideTheScreenshotTreeIsRefused(): void
     {
         $this->expectException(InvalidConfigurationException::class);

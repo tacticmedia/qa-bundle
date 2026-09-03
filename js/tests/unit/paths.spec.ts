@@ -8,7 +8,7 @@ test.describe('resolveRoot', () => {
         delete process.env.QA_SCREENSHOTS_DIR;
     });
 
-    test('the environment outranks the option, so setup and capture cannot disagree', () => {
+    test('the environment has precedence over the option, so setup and capture use the same root', () => {
         process.env.QA_SCREENSHOTS_DIR = '/tmp/from-env';
 
         expect(resolveRoot('/tmp/from-option')).toBe('/tmp/from-env');

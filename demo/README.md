@@ -61,8 +61,9 @@ symlinked package resolves `@playwright/test` from its own `node_modules`, and P
 load twice.
 
 The spec repeats each stage of the PHP journey and uses the same six labels.
-`playwright.config.ts` sets `QA_SCREENSHOTS_DIR` to the `var/screenshots` directory of this
-application. **The two producers alternate; they do not accumulate.** Each one empties the tree when
+`playwright.config.ts` defaults `QA_SCREENSHOTS_DIR` to the `var/screenshots` directory of this
+application when the variable is not set. **The two producers alternate; they do not accumulate.**
+Each one empties the tree when
 its run starts.
 
 ## Review
@@ -83,10 +84,11 @@ docker compose up --build review
 ```
 
 Open http://localhost:8000/_dev/screenshots. `compose.yaml` mounts `var/screenshots` and
-`var/review` under `/data`, which is the root of this project as the container reads it. The
+`var/review` under `/data`, which is the root of this project inside the container. The
 generated brief therefore prints `var/screenshots/...` and not a path inside the container. The
-service specifies both an `image:` and a `build:`, so `up` on its own uses the image that is tagged
-locally. To use the published image, delete the `build:` block or run `docker compose pull review`.
+service specifies both an `image:` and a `build:`. `up` on its own reuses an image already in the
+local cache, otherwise pulls, and builds only when the pull fails. To take the published image after
+a local build, run `docker compose pull review`; deleting `build:` alone keeps the local tag.
 
 Use this method for a project with no PHP tools. Capture continues to run on the host.
 
@@ -94,7 +96,7 @@ Use this method for a project with no PHP tools. Capture continues to run on the
 
 The Tailwind build of this application supplies the styles for the review page, instead of the CDN
 script that the default layout of the bundle loads. Two items produce that result, and
-`docs/frontend.md` in the bundle asks a host for both:
+`docs/frontend.md` in the bundle requires both from a host:
 
 `templates/bundles/TacticMediaQaBundle/layout.html.twig` overrides the `styles` block with a link to
 the compiled stylesheet:
@@ -124,12 +126,12 @@ While changing those templates, rebuild on save:
 php bin/console tailwind:build --watch
 ```
 
-## Where this deviates from the bundle's host instructions
+## Differences from the host instructions of the bundle
 
 - The bundle is in `require` and is enabled in each environment, because this application exists
   only to test it. A production host installs it with `--dev` and enables it for `dev`.
-- The review routes come from Symfony 8's `routing.controllers` loader, which reads them off the
-  controller service. The `config/routes/qa.yaml` import the bundle's README documents is the way
-  for hosts on Symfony 6.4 or 7.4; this application does not use it.
+- The review routes come from the `routing.controllers` loader (symfony/routing 7.4 and later),
+  which reads them from the controller service. The `config/routes/qa.yaml` import that the README
+  of the bundle documents is the method for hosts on Symfony 6.4; this application does not use it.
 - `assets/app.js` does not import `styles/app.css`. Twig links the stylesheet instead, so it
   reaches the page once and not a second time through `importmap('app')`.

@@ -36,7 +36,7 @@ test('captures every viewport and mode into a tree the reader can parse', async 
     await page.setContent(TALL_PAGE);
     await qaScreenshots.capture('Tall page');
 
-    // A label already shot in this scenario is skipped.
+    // A label already captured in this scenario is skipped.
     await qaScreenshots.capture('Tall page');
 
     const groups = await discoverGroups(root);
@@ -74,7 +74,7 @@ test('captures every viewport and mode into a tree the reader can parse', async 
     }
 });
 
-test('a page taller than the viewport grows the image, and the sidecar follows it', async ({ page, qaScreenshots }) => {
+test('a page taller than the viewport grows the image, and the sidecar records the same size', async ({ page, qaScreenshots }) => {
     await page.setContent(TALL_PAGE);
     await qaScreenshots.capture('Tall only');
 

@@ -1,18 +1,19 @@
 # Host setup
 
 What a Symfony host must have after `composer require`. The [README](../README.md) gives the
-install commands. Two concerns have their own documents: [csrf.md](csrf.md) for the token setup
+install commands. Two subjects have separate documents: [csrf.md](csrf.md) for the token setup
 on each Symfony branch, and [frontend.md](frontend.md) for the JavaScript, the styling and the
 content security policy.
 
 ## Stimulus controllers
 
 Composer writes the Stimulus controllers into `assets/controllers.json`. The package has the
-`symfony-ux` keyword, so the Flex package synchronizer adds the block during installation and keeps
-it on each later run. Flex writes the block only where the host already has
-`assets/controllers.json` and a root `package.json` or `importmap.php`. It does not create the file.
-Confirm that the block is present, and write it manually if the file did not exist. **Without the
-block the page renders, but it does not respond to a selection or to a key**:
+`symfony-ux` keyword, so the Flex package synchronizer adds the block on `composer require` and
+rewrites it on each later `composer update`, `require` or `remove`; `composer install` leaves the
+file as committed. Flex writes the block only where the host already has `assets/controllers.json`
+and a root `package.json` or `importmap.php`. It does not create the file. Confirm that the block is
+present, and write it manually if the file did not exist. **Without the block the page renders, but
+it does not respond to a selection or to a key**:
 
 ```json
 {
@@ -23,61 +24,74 @@ block the page renders, but it does not respond to a selection or to a key**:
             "confirm": { "enabled": true, "fetch": "lazy" },
             "anchor-highlight": { "enabled": true, "fetch": "lazy" }
         }
-    }
+    },
+    "entrypoints": []
 }
 ```
 
-The synchronizer rebuilds the complete file from the installed `symfony-ux` packages. It removes a
-manually added entry for a package that does not have the keyword on the next composer run.
+The synchronizer rebuilds the `controllers` block from the packages in `composer.lock` that have the
+keyword and a `package.json` under `vendor/`, keeps the `enabled` and `fetch` values the host set,
+and keeps `entrypoints` unchanged. It removes an entry it cannot match to such a package on the next
+`composer update`, `require` or `remove`.
 
 ## The bundle and controllers.json must agree
 
 `assets/controllers.json` names the package for every environment, because Composer writes it and
-Composer knows nothing about environments. The AssetMapper path that each entry resolves against
+Composer does not distinguish environments. The AssetMapper path that each entry resolves against
 comes from `TacticMediaQaBundle::prependExtension()`, which runs only where `config/bundles.php`
 enables the bundle. Where the two disagree, StimulusBundle stops the container build:
 
 ```
-In ControllersMapGenerator.php line 147:
-  Could not find an asset mapper path that points to the "annotate" controller
-  in package "tacticmedia/qa-bundle", defined in controllers.json.
+Could not find an asset mapper path that points to the "annotate" controller
+in package "tacticmedia/qa-bundle", defined in controllers.json.
 ```
 
-**Wherever `assets/controllers.json` names the package, the bundle must be registered.** Two host
-states satisfy that:
+**Wherever `assets/controllers.json` names the package, the bundle must be registered.** Flex
+rewrites the file on `composer update`, `require` and `remove` only; `composer install`, with or
+without `--no-dev`, leaves it as committed. Two host states satisfy that:
 
-- `composer require --dev` with `['dev' => true, 'test' => true]`. Build the production assets
-  after `composer install --no-dev`, which makes Flex remove the block first.
-- `composer require` with `['all' => true]`, for a pipeline that runs `asset-map:compile` while the
-  development dependencies are installed.
+- `composer require` with `['all' => true]`. The block and the registration then exist in every
+  environment, and a pipeline can run `asset-map:compile` with or without the development
+  dependencies. The demo uses this state.
+- `composer require --dev` with `['dev' => true, 'test' => true]`. A production build then finds
+  the block while nothing registers the path, so remove it first with a command that runs the
+  synchronizer against the reduced vendor tree:
 
-`test` matters as much as `dev`. A host that opens the page from a `WebTestCase` builds a container
+  ```
+  composer install --no-dev
+  composer update --no-dev --lock
+  bin/console asset-map:compile
+  ```
+
+  A later `composer install` in a development checkout does not restore the block;
+  `composer update --lock` does.
+
+`test` is as necessary as `dev`. A host that opens the page from a `WebTestCase` builds a container
 from the same `controllers.json`.
 
 To recover a host that already shows the error, add the missing line to `config/bundles.php` and run
-`bin/console cache:clear`. To install into a host that has no recipe, keep Composer away from the
-container until the line exists:
+`bin/console cache:clear`. To install into a host that has no recipe, run Composer with no scripts
+until the line exists, then run the synchronizer to write the block:
 
 ```
 composer require --dev --no-scripts tacticmedia/qa-bundle symfony/panther
 # add the bundles.php line and the routes
-composer install
+composer update --lock
 ```
 
-`--no-dev --no-scripts` together leave the opposite state: the block stays in the committed file
-after the package is gone, and the reader reports the package instead of the path.
+A `composer install --no-dev` after a `--dev` install leaves the block in the committed file after
+the package is removed, and the reader then reports the package instead of the path:
 
 ```
 Could not find package "tacticmedia/qa-bundle" referred to from controllers.json.
 ```
 
-A deploy that runs the Composer scripts does not meet this, because Flex rewrites the file.
-
 ## The capture trait
 
-`JourneyScreenshots` goes on one shared journey base class, and on no other class. The clear-once
-guard is a trait static, which PHP copies into each class that uses the trait directly, so a second
-such class empties the tree again during the run.
+Use `JourneyScreenshots` on one shared journey base class only. The clear-once guard is a trait
+static, which PHP copies into each class that uses the trait directly, so a second such class
+empties the tree again during the run. A test that uses a data provider captures under one scenario
+name, so each data set overwrites the captures of the one before it.
 
 `captureFullPageScreenshot($client, $label)` captures the settled screen at each viewport and colour
 scheme. The label becomes part of the basename, and the brief names it. The capture uses the Chrome
@@ -122,8 +136,7 @@ configuration, if the directory names agree with the grammar in
 
 ## A firewall that permits `/_dev/`
 
-The page has no authentication of its own and needs nothing from SecurityBundle. Where the host has
-a firewall:
+The page has no authentication and does not use SecurityBundle. Where the host has a firewall:
 
 ```yaml
 security:

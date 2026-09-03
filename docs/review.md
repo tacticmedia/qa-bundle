@@ -12,8 +12,8 @@ the grid, and use the keyboard:
 | Key | Does |
 | --- | --- |
 | Left / Right | Moves to the previous / next capture in this group. |
-| Up / Down | Moves to the same capture one group up / down the sidebar, or that group's grid when it lacks this capture. |
-| Escape | Drops the selection, then the focused field, then returns to the group grid. |
+| Up / Down | Moves to the same capture one group up / down the sidebar, or to the grid of that group when it does not contain this capture. |
+| Escape | Cancels the selection, then removes the focus from the field, then returns to the group grid. |
 | Cmd+Enter, Ctrl+Enter | Submits the note form the focus is in, whether a new note or one being edited. |
 
 Both axes are circular. While a field has the focus, the arrow keys move the caret and not the

@@ -1,5 +1,5 @@
-// npm `files` cannot reach outside the package root, so the shared capture script
-// is copied in at build time. Both producers read one source: resources/capture.
+// npm `files` cannot reference a path outside the package root, so the build copies
+// the shared capture script. Both producers read one source, resources/capture.
 import { copyFileSync, mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';

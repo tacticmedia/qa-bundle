@@ -9,8 +9,8 @@ use TacticMedia\QaBundle\Review\FeedbackItem;
 use TacticMedia\QaBundle\Review\FeedbackStore;
 
 /**
- * The store is the only state the review carries between requests, so every
- * assertion here reloads through a fresh instance to exercise the file round-trip.
+ * The store is the only state that the review keeps between requests, so each
+ * assertion here reloads through a new instance to test the file round trip.
  */
 final class FeedbackStoreTest extends TestCase
 {

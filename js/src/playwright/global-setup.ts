@@ -5,7 +5,7 @@ import { resolveRoot } from '../capture/paths.js';
 import type { QaScreenshotsOptions } from '../capture/types.js';
 
 /**
- * The tree holds one run, so this setup empties it before the first worker
+ * The tree contains one run, so this setup empties it before the first worker
  * starts, which is the only safe point when workers run in parallel. This setup
  * does not read a root that test.use() sets in a spec: set the root in the
  * Playwright configuration or in QA_SCREENSHOTS_DIR.

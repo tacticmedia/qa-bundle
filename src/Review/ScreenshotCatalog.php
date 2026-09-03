@@ -11,8 +11,8 @@ namespace TacticMedia\QaBundle\Review;
  * The .json sidecar beside each PNG gives the state of the captured page
  * ({@see ScreenMetadata}).
  *
- * Modes and viewports are whatever the tree holds, so a journey that captures a
- * new viewport or a third colour scheme needs no change here.
+ * Modes and viewports are the directories that the tree contains, so a journey
+ * that captures a new viewport or a third colour scheme needs no change here.
  */
 final readonly class ScreenshotCatalog
 {
@@ -163,7 +163,7 @@ final readonly class ScreenshotCatalog
      * The targets that the reviewer can move to from $name: the screens in its own
      * group, and the same screen in the adjacent groups. Both axes are circular.
      *
-     * @throws \InvalidArgumentException when $mode/$viewport is not a group, or holds no capture named $name
+     * @throws \InvalidArgumentException when $mode/$viewport is not a group, or contains no capture named $name
      */
     public function navigation(string $mode, string $viewport, string $name): ScreenNavigation
     {

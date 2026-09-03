@@ -12,9 +12,10 @@ use Twig\Environment;
 
 /**
  * The review page in a host that builds its JavaScript with a bundler instead of AssetMapper,
- * and so overrides the layout the way docs/frontend.md documents. What is under test is that
- * contract - the `@!` parent reference, the block name, and the bundle rendering at all with
- * no importmap() function in the environment - not the tag the host's bundle emits.
+ * and therefore overrides the layout as docs/frontend.md documents. The test covers that
+ * contract: the `@!` parent reference, the block name, and that the bundle renders with no
+ * importmap() function in the environment. It does not cover the tag that the host's bundle
+ * emits.
  */
 abstract class BundlerHostTestCase extends WebTestCase
 {
@@ -35,7 +36,7 @@ abstract class BundlerHostTestCase extends WebTestCase
         $this->removeFixtureTree();
     }
 
-    #[TestDox('The host has no importmap extension, so the bundle default could not have rendered')]
+    #[TestDox('The host has no importmap extension, so the default layout of the bundle cannot render')]
     public function testTheHostHasNoImportMapExtension(): void
     {
         self::createClient();
@@ -58,7 +59,7 @@ abstract class BundlerHostTestCase extends WebTestCase
         self::assertStringContainsString(self::BUILT_ENTRY, (string) $client->getResponse()->getContent());
     }
 
-    #[TestDox('The annotate page still carries the hooks the qa controllers bind to')]
+    #[TestDox('The annotate page contains the targets that the qa controllers bind to')]
     public function testTheAnnotatePageCarriesTheStimulusHooks(): void
     {
         $client = self::createClient();

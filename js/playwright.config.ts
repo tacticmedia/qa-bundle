@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-/** The domain specs: no browser, no server, nothing to install. */
+/** The unit specs. They need no browser and no server. */
 export default defineConfig({
     testDir: './tests/unit',
     fullyParallel: true,

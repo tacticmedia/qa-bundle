@@ -1,12 +1,12 @@
 {#
-    Screenshot review shell. The sidebar lists each mode/viewport group from the
+    Screenshot review layout. The sidebar lists each mode/viewport group from the
     last journey run, with the number of open notes for that group.
 
     Pages fill {% block review_content %}. A capture page that overrides
     page_actions calls {{ parent() }} to keep the Generate prompt action. The
     prompt page does not, because it needs no link to itself.
 
-    To put the review inside your own shell, override this template from the host
+    To put the review inside your own layout, override this template from the host
     at templates/bundles/TacticMediaQaBundle/layout.html.twig. Use the blocks
     `title`, `brand`, `styles`, `scripts` and `sidebar`.
 

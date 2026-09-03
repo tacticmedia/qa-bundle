@@ -18,8 +18,8 @@ use TacticMedia\QaBundle\TacticMediaQaBundle;
 
 /**
  * A Symfony Reprise host, the Vite and Rsbuild counterpart of {@see \TacticMedia\QaBundle\Tests\Fixtures\encore\EncoreKernel}.
- * symfony/reprise needs PHP 8.4 and Symfony 7.4, so it cannot sit in require-dev and this
- * class only loads where CI installed it.
+ * symfony/reprise needs PHP 8.4 and Symfony 7.4, so it cannot be in require-dev, and this
+ * class loads only where CI installed it.
  */
 final class RepriseKernel extends Kernel
 {

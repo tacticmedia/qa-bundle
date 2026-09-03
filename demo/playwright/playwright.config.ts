@@ -5,8 +5,8 @@ import { fileURLToPath } from 'node:url';
 
 const here = dirname(fileURLToPath(import.meta.url));
 
-// Absolute: library code cannot assume the working directory, and the demo's own
-// review reads this exact tree whether it is served by `php -S` or by compose.
+// An absolute path: library code cannot assume the working directory, and the
+// review of the demo reads this tree whether `php -S` or compose serves it.
 process.env.QA_SCREENSHOTS_DIR ??= resolve(here, '../var/screenshots');
 
 export default defineConfig({

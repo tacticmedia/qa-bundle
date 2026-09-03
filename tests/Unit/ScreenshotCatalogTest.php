@@ -15,7 +15,8 @@ use TacticMedia\QaBundle\Review\ScreenshotGroup;
 /**
  * The catalog recovers a capture's origin from its filename alone, so the grammar
  * produced by JourneyScreenshots::fileSafe() is the contract under test. Modes and
- * viewports are whatever the tree holds, so the discovered order is too.
+ * viewports are the directories that the tree contains, and the discovered order
+ * follows from them.
  */
 final class ScreenshotCatalogTest extends TestCase
 {
@@ -131,8 +132,8 @@ final class ScreenshotCatalogTest extends TestCase
     }
 
     /**
-     * Up and down keep the screen and swap the group, wrapping through the sidebar
-     * order; a group that never captured this screen crosses to its grid instead.
+     * Up and down keep the screen and change the group, and wrap in sidebar order.
+     * A group that does not contain this screen gives its grid instead.
      */
     public function testNavigationCrossesToTheAdjacentGroupsInSidebarOrder(): void
     {
@@ -244,7 +245,7 @@ final class ScreenshotCatalogTest extends TestCase
         self::assertTrue($this->catalog()->allIgnored()->isEmpty());
     }
 
-    #[TestDox('Each way a file can miss the contract is reported with its own reason')]
+    #[TestDox('Each way that a file can fail the contract is reported with its own reason')]
     public function testEveryIgnoredReasonIsReported(): void
     {
         $this->writePair('light', '1920x1080', 'landscape', 'AJourneyE2eTest-testA-001_Home');
@@ -281,7 +282,7 @@ final class ScreenshotCatalogTest extends TestCase
         self::assertTrue($this->catalog()->allIgnored()->isEmpty());
     }
 
-    #[TestDox('The group view reports only what its own directory holds')]
+    #[TestDox('The group view reports only what its own directory contains')]
     public function testIgnoredIsScopedToOneGroup(): void
     {
         $this->write('light', '1920x1080', 'landscape', 'wrong.png');
@@ -293,7 +294,7 @@ final class ScreenshotCatalogTest extends TestCase
         self::assertSame('light/1920x1080/landscape/wrong.png', $ignored->entries[0]->path);
     }
 
-    #[TestDox('The list is capped, and the count of what it does not show stays true')]
+    #[TestDox('The list is capped, and the hidden count is correct')]
     public function testTheListIsCapped(): void
     {
         for ($i = 0; $i < 25; ++$i) {

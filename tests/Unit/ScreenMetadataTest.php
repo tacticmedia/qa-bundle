@@ -10,12 +10,12 @@ use TacticMedia\QaBundle\Review\ScreenMetadata;
 
 /**
  * The sidecar is written by a browser script and read back a run later, so the
- * parser treats every document as untrusted: a wrong shape yields null and a bad
- * element row is dropped, never an exception.
+ * parser treats each document as untrusted: a wrong shape gives null and an
+ * invalid element row is removed. It does not throw.
  */
 final class ScreenMetadataTest extends TestCase
 {
-    #[TestDox('A well-formed sidecar becomes the page and its elements')]
+    #[TestDox('A well-formed sidecar parses into the page and its elements')]
     public function testAValidDocumentParses(): void
     {
         $metadata = ScreenMetadata::fromJson((string) json_encode([
@@ -49,7 +49,7 @@ final class ScreenMetadataTest extends TestCase
         self::assertSame(['href' => '/admin/product/1'], $metadata->elements[0]->attributes);
     }
 
-    #[TestDox('A sidecar from before the trait stamped its origin still parses')]
+    #[TestDox('A sidecar without testClass and testFile still parses')]
     public function testTheCaptureOriginIsOptional(): void
     {
         $stamped = ScreenMetadata::fromJson((string) json_encode([
@@ -76,7 +76,7 @@ final class ScreenMetadataTest extends TestCase
         self::assertNull(ScreenMetadata::fromJson('{"url": "/x", "title": "X", "pageWidth": 100}'));
     }
 
-    #[TestDox('An element row missing a field is skipped, the valid ones survive')]
+    #[TestDox('An element row with a missing field is skipped, and the valid rows are kept')]
     public function testInvalidElementRowsAreSkipped(): void
     {
         $metadata = ScreenMetadata::fromJson((string) json_encode([

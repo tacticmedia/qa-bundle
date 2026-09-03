@@ -26,13 +26,13 @@ trait ScreenshotFixtures
         }
     }
 
-    /** The fixture host whose var/ holds the tree. Overridden by a test driving another kernel. */
+    /** The fixture host whose var/ contains the tree. Overridden by a test that drives another kernel. */
     protected function fixtureProjectDirectory(): string
     {
         return __DIR__.'/Fixtures/app';
     }
 
-    /** Both roots are derived rather than stored, so a test that skips before seeding still tears down. */
+    /** Both roots are derived and not stored, so a test that skips before seeding still tears down. */
     protected function removeFixtureTree(): void
     {
         $this->removeTree($this->fixtureScreenshotRoot());
@@ -74,7 +74,7 @@ trait ScreenshotFixtures
                     'x' => 0, 'y' => 0, 'width' => $width, 'height' => $height,
                     'text' => null, 'classes' => null, 'attributes' => [],
                 ],
-                // Centred, which is where a drag across the middle of the image lands.
+                // Centred, so that a drag across the middle of the image covers it.
                 [
                     'selector' => self::FIXTURE_SELECTOR,
                     'tag' => 'a',

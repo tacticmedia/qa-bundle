@@ -31,20 +31,20 @@ re-run replaces each file on disk.
 
 | Part | Grammar | Notes |
 |---|---|---|
-| `mode` | `^[a-z][a-z0-9-]*$` | Directory name, discovered not configured. `light` and `dark` by convention. |
+| `mode` | `^[a-z][a-z0-9-]*$` | Directory name. The reader discovers it; it is not configured. `light` and `dark` by convention. |
 | `WxH` | `^\d+x\d+$` | The **requested viewport** in CSS pixels, not the image size. |
-| `orientation` | `portrait` \| `landscape` | Closed set. `height >= width` is portrait, so a square is portrait. |
-| `journey` | `\w+` | `[A-Za-z0-9_]`. |
-| `scenario` | `\w+` | `[A-Za-z0-9_]`. |
-| `NNN` | `\d{3}` | The capture's position in the scenario, from `001`. Zero-padded, per scenario. At most 999 per scenario; a fourth digit does not parse. |
-| `label` | `^[A-Za-z0-9 _-]+$` | Spaces and underscores are legal. Any other character must be replaced, not dropped, so distinct labels stay distinct. |
+| `orientation` | `portrait` \| `landscape` | Closed set. `height >= width` is portrait, so a square is portrait. One orientation directory for each `WxH`; the reader reads the first that it finds and does not report a second. |
+| `journey` | `\w+` | `[A-Za-z0-9_]` in the C locale that PHP starts in. |
+| `scenario` | `\w+` | `[A-Za-z0-9_]` in the C locale that PHP starts in. |
+| `NNN` | `\d{3}` | The capture's position in the scenario, from `001`. Zero-padded, per scenario. At most 999 per scenario; the producers do not enforce the limit, and the reader lists a fourth digit as an ignored entry. |
+| `label` | `^[A-Za-z0-9 _-]+$` | Spaces and underscores are legal. Any other character must be replaced, not dropped, so a label with an illegal character stays distinct from the same label without it. Two labels whose illegal characters differ map to one string and differ only by `NNN`. |
 
 The reader ignores a directory or file that does not match. This is not an error. The review page
 reports the entries that it ignored: the complete tree on the empty page, and the directory of the
 current group on a group page. It does not report two kinds of entry: an entry whose name starts
 with a dot, and a file above an orientation directory.
 
-### Why `WxH` is not the image size
+### The difference between `WxH` and the image size
 
 The document height is only known after layout at the device width. A producer measures at that
 width, increases the viewport to the full document height, and captures the complete page. For a
@@ -72,7 +72,9 @@ Optional:
 | `testClass` | string or null | Producer-side identifier of the journey. The PHP trait writes a fully qualified class name, the npm package writes the journey slug. Stored but not currently rendered; the brief names the journey from the basename. |
 | `testFile` | string or null | Path to the source file that produced the capture, project-relative when possible. The agent brief prints it. |
 
-The reader ignores unknown top-level keys, so a producer can add its own keys.
+The reader ignores unknown top-level keys, so a producer can add its own keys. It truncates a
+fractional page size and accepts any numeric value where the schema demands a positive integer; the
+schema is the normative shape.
 
 ### Element shape
 
@@ -81,7 +83,7 @@ Required per element: `selector` (string), `tag` (string), `x`, `y`, `width`, `h
 but truncated to whole pixels by the reader, so round them yourself.
 
 Optional: `text` (string or null), `classes` (string or null), `attributes` (object of string to
-string).
+string). The shipped producers omit an attribute whose value is empty.
 
 The reader removes an element that does not have the required shape, and loads the remainder of the
 sidecar.
@@ -100,10 +102,11 @@ Consequences for a producer:
 - Capture at CSS scale, one image pixel per CSS pixel. Chrome DevTools Protocol reaches that with
   `deviceScaleFactor: 1`; Playwright reaches it with `screenshot({ scale: 'css' })` at any device
   scale factor.
-- Stamp the page size from the capture clip you asked for, not by reading the page back afterwards.
-  Re-measuring after the final resize can return a value a few pixels short of the image.
-- Do not resize, re-encode or crop the PNG after the browser produces it. A capture-time clip is fine
-  as long as it covers the full page and the stamped size matches it.
+- Stamp the page size from the size you asked the browser for, not by reading the page back
+  afterwards. Re-measuring after the final resize can return a value a few pixels short of the
+  image.
+- Do not resize, re-encode or crop the PNG after the browser produces it. A capture-time clip is
+  acceptable if it covers the full page and the stamped size matches it.
 
 A reader accepts a difference of 2 pixels or less on each axis. Above that difference, the review
 marks the layout of the note as changed and reports the coordinates without a match against
@@ -129,10 +132,10 @@ from an earlier run.
 
 ## Root resolution
 
-`QA_SCREENSHOTS_DIR` names the root. A producer that layers a root option on top of it must let the
-environment variable win, so a per-run override cannot disagree with itself between a setup step and
-the capture step. The PHP trait's `screenshotRoot()` is an override rather than a layered option, so
-a host that replaces it replaces the environment handling with it.
+`QA_SCREENSHOTS_DIR` names the root. A producer that layers a root option on top of it must give
+the environment variable precedence, so a per-run override gives the same root to the setup step
+and to the capture step. The PHP trait's `screenshotRoot()` is an override and not a layered option,
+so a host that replaces it also replaces the environment handling.
 
 ## Versioning
 

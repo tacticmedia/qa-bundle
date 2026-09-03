@@ -10,7 +10,7 @@ a dev dependency there. Here it is a normal dependency, so TwigBundle registers 
 
 ## The mount contract
 
-**`/data` is the reviewed project's root as the container sees it. Mount each tree at the path it
+**`/data` is the root of the reviewed project inside the container. Mount each tree at the path it
 has on the host.**
 
 The generated agent brief then prints paths that the host can open, because the brief gives the
@@ -49,8 +49,10 @@ On Linux the container writes notes and crops as uid 1000. To own them, pass
 `../..`, and the Dockerfile copies the repository with the same structure, so the relative path
 resolves to the same location on a developer machine and in the image.
 
-**After a change to the dependencies of the bundle, run `composer update` here.** The `docker` CI
-job builds this image on each push and pull request, and detects a difference.
+**After a change to the dependencies of the bundle, run `composer update` here.** Nothing compares
+the lock with the bundle's `composer.json`: `composer install` in the image installs from the lock,
+and an outdated lock breaks the build only where `cache:warmup` or the review page needs the missing
+package.
 
 ## Local development without Docker
 
@@ -63,8 +65,10 @@ QA_PROJECT_ROOT=/absolute/path/to/project \
     php -S 127.0.0.1:8000 -t public public/index.php
 ```
 
-Do not set `APP_ENV` for this command. The built-in server sends a request for an existing static
-file to the router script, so it executes the compiled assets under `public/assets` as PHP instead
-of serving them. In `dev` the request goes through AssetMapper, which operates correctly. The image
-runs `prod` behind Caddy, where `php_server` serves an existing file directly and sends other
-requests to PHP.
+Do not run `asset-map:compile` before this command, and remove `public/assets` if it exists. The
+built-in server passes an existing file under `public/` to the router script as `SCRIPT_FILENAME`,
+and the Symfony runtime then requires the compiled asset as PHP instead of serving it. Leave
+`APP_ENV` unset: in `prod` no dev server serves uncompiled assets, and the built-in server passes an
+exported `APP_ENV` to PHP only where `variables_order` in php.ini contains `E`. The image runs
+`prod` behind Caddy, where `php_server` serves an existing file directly and sends other requests
+to PHP.

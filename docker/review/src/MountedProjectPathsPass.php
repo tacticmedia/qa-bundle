@@ -11,13 +11,12 @@ use TacticMedia\QaBundle\Review\SelectionCropper;
 
 /**
  * The agent brief prints paths relative to the project directory, which inside a
- * container is the review application and not the reviewed project. /data stands
- * in for the project root instead, so mounting each tree at the relative path it
- * has on the host makes the brief name paths the host can open.
+ * container is the review application and not the reviewed project. /data replaces
+ * the project root, so when each tree is mounted at the relative path it has on the
+ * host, the brief prints paths that the host can open.
  *
- * A compiler pass rather than a service override: the bundle's extension
- * registers these definitions while the container compiles, after anything this
- * application declares.
+ * A compiler pass and not a service override: it replaces one argument of the
+ * bundle's definitions and leaves the rest of each service as the bundle declares it.
  */
 final class MountedProjectPathsPass implements CompilerPassInterface
 {

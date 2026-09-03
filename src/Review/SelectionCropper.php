@@ -35,8 +35,9 @@ final readonly class SelectionCropper
     }
 
     /**
-     * Fails open. The prompt contains the coordinates, so a crop that cannot be
-     * produced reduces the detail in the instructions but does not cause an error.
+     * Returns null on failure. The prompt contains the coordinates, so a crop that
+     * cannot be produced reduces the detail in the instructions but does not cause
+     * an error.
      *
      * Both images stay local to the function. A full-page PNG decodes to 50-100 MB,
      * so the prompt loop needs each one to be released when the frame returns.

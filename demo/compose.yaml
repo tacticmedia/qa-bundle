@@ -1,22 +1,23 @@
-# Reviewing without a PHP toolchain on the host. Capture still runs outside the
-# container: browsers live on the host, and Playwright manages its own.
+# Review without a PHP toolchain on the host. Capture runs outside the
+# container: the browsers are on the host, and Playwright manages its own.
 services:
   review:
     image: ghcr.io/tacticmedia/qa-review:latest
-    # Drop this to always take the published image. `docker compose up --build review`
-    # builds from this checkout instead, which is what to do while working on the bundle.
+    # `up` reuses a locally cached image, otherwise pulls, and builds only when the pull
+    # fails. `docker compose up --build review` builds from this checkout, which is what to
+    # do while working on the bundle; `docker compose pull review` takes the published image.
     build:
       context: ..
       dockerfile: docker/review/Dockerfile
-    # The page has no authentication. Publish it on the LAN only if you mean to.
+    # The page has no authentication. Publish it on the LAN only when intended.
     ports:
       - "127.0.0.1:8000:8000"
-    # /data is the project root as the container sees it, so each tree is mounted
-    # at the path it has here. That is what makes the agent brief print paths this
-    # checkout can open.
+    # /data is the project root inside the container, so each tree is mounted at
+    # the path it has here. The agent brief then prints paths that this checkout
+    # can open.
     volumes:
       - ./var/screenshots:/data/var/screenshots
       - ./var/review:/data/var/review
     # On Linux the container writes notes as uid 1000. To own them yourself, start the
     # service with `docker compose run --user "$(id -u):$(id -g)" review`. A `user:` key
-    # here cannot do it: compose never sees $UID or $GID, which no shell exports.
+    # here reads $UID and $GID only where the shell exports them or .env sets them.

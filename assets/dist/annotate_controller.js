@@ -4,15 +4,15 @@ import { visit } from '@hotwired/turbo';
 /*
  * Screenshot review: drag a rectangle over the screenshot to bind a note to one
  * area, or click without dragging to note the whole screen. Coordinates are
- * written to the note form in natural image pixels, so a note keeps its meaning
- * whatever width the page renders the screenshot at.
+ * written to the note form in natural image pixels, so a note stays correct at
+ * each width the page renders the screenshot at.
  *
- * It also drives the review from the keyboard: left/right walk the group,
- * up/down carry the screen to the adjacent group, Escape steps back out, and
- * Cmd/Ctrl+Enter saves the note being written. Every destination arrives as a
- * value because the header links live outside this element.
+ * It also drives the review from the keyboard: left/right move through the group,
+ * up/down open the same screen in the adjacent group, Escape cancels or goes back,
+ * and Cmd/Ctrl+Enter saves the note being written. Each destination is a value,
+ * because the header links are outside this element.
  *
- * Geometry is assigned through the CSSOM: style-src gates a style attribute
+ * Geometry is assigned through the CSSOM: style-src controls a style attribute
  * parsed from markup, not a property write.
  *
  * Usage (always via the Twig helpers, never hand-written data-* attributes):
@@ -66,15 +66,16 @@ export default class extends Controller {
     }
 
     /**
-     * Anything that moves or resizes the image has to redraw the overlays: the
-     * image loading, and a stage resize re-centring or rescaling it. Observing
-     * both covers the first draw too - a ResizeObserver fires once on observe.
+     * Each event that moves or resizes the image must redraw the overlays: the
+     * image load, and a stage resize that re-centres or rescales it. Observation
+     * of both also covers the first draw, because a ResizeObserver fires once on
+     * observe.
      */
     reposition() {
         this.markerTargets.forEach((marker) => this.placeMarker(marker));
 
         if (this.pending()) {
-            this.repaintPending(); // the form came back from a failed save
+            this.repaintPending(); // the form was re-rendered after a failed save
         }
     }
 
@@ -140,8 +141,8 @@ export default class extends Controller {
     }
 
     /**
-     * Escape peels one layer at a time: the pending selection, then the focus, then
-     * the page.
+     * Escape cancels one level at a time: the pending selection, then the focus,
+     * then the page.
      */
     cancel(event) {
         if (this.pending()) {
@@ -231,8 +232,8 @@ export default class extends Controller {
     /**
      * An overlay is positioned against the stage, which is not the image: a
      * narrower screenshot is centred in it, and a wider one is scaled down by the
-     * preflight `max-width: 100%`. The image's own offset is the origin, and every
-     * length is a pixel - a percentage would resolve against the stage.
+     * preflight `max-width: 100%`. The offset of the image is the origin, and each
+     * length is in pixels, because a percentage would resolve against the stage.
      */
     position(element, box, scale) {
         element.style.left = `${this.imageTarget.offsetLeft + box.x * scale.x}px`;

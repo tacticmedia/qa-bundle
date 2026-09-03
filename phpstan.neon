@@ -8,15 +8,16 @@ parameters:
         - src
         - tests
     # Each fixture host writes its container cache here, so none of these exist in a
-    # fresh checkout. (?) marks the path optional rather than a configuration error.
+    # fresh checkout. (?) marks the path as optional, so a missing path is not a
+    # configuration error.
     excludePaths:
         - tests/Fixtures/app/var (?)
         - tests/Fixtures/encore/var (?)
         - tests/Fixtures/reprise/var (?)
 
     # symfony/reprise needs PHP 8.4 and Symfony 7.4, so it cannot be a dev dependency:
-    # the lower CI legs could not install it. Where it is absent this class is not there,
-    # and where CI does install it nothing matches - which reportUnmatched allows.
+    # the lower CI matrix jobs could not install it. Where it is absent, the class is unknown.
+    # Where CI installs it, nothing matches, which reportUnmatched allows.
     ignoreErrors:
         -
             identifier: class.notFound

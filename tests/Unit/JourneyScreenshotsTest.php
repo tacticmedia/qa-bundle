@@ -9,12 +9,12 @@ use PHPUnit\Framework\TestCase;
 use TacticMedia\QaBundle\Test\JourneyScreenshots;
 
 /**
- * The capture trait runs with no container, so what it reads from the environment
- * and what a host can override is the contract. Capturing itself needs a browser
- * and belongs to the journeys.
+ * The capture trait runs with no container, so the contract is what it reads from
+ * the environment and what a host can override. The capture needs a browser and is
+ * tested by the journeys.
  *
- * Using the trait here also runs its #[Before] hook, which is what empties the
- * tree at run start.
+ * Use of the trait here also runs its #[Before] hook, which empties the tree at
+ * the start of the run.
  */
 final class JourneyScreenshotsTest extends TestCase
 {
@@ -41,20 +41,20 @@ final class JourneyScreenshotsTest extends TestCase
         }
     }
 
-    #[TestDox('QA_SCREENSHOTS_DIR wins over the working-directory default')]
+    #[TestDox('QA_SCREENSHOTS_DIR has precedence over the working-directory default')]
     public function testTheRootComesFromTheEnvironment(): void
     {
         self::assertSame(self::$root, self::screenshotRoot());
     }
 
-    #[TestDox('The first test of a run empties the tree, keeping the root itself')]
+    #[TestDox('The first test of a run empties the tree and keeps the root')]
     public function testThePreparationHookClearedTheTree(): void
     {
         self::assertDirectoryExists(self::$root);
         self::assertSame([], glob(self::$root.'/*'));
     }
 
-    #[TestDox('The shipped viewports cover portrait and landscape, and are all usable sizes')]
+    #[TestDox('The default viewports include portrait and landscape, and each has a positive size')]
     public function testTheDefaultViewports(): void
     {
         $viewports = self::screenshotViewports();
@@ -80,7 +80,7 @@ final class JourneyScreenshotsTest extends TestCase
         self::assertSame(['light', 'dark'], self::screenshotColorSchemes());
     }
 
-    #[TestDox('The shared metadata script ships with the package and stays an expression')]
+    #[TestDox('The shared metadata script is in the package and is an expression')]
     public function testTheMetadataScriptIsAnExpression(): void
     {
         self::assertFileExists(\dirname(__DIR__, 2).'/resources/capture/metadata.js');

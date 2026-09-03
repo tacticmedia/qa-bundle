@@ -16,7 +16,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # The floor, both supported LTS branches, and what the first consumer runs.
+        # The minimum versions, both supported LTS branches, and the versions the first
+        # consumer runs.
         include:
           - php: '8.2'
             symfony: '6.4.*'
@@ -37,10 +38,10 @@ jobs:
           extensions: gd, intl
           coverage: none
 
-      # Flex is global so no recipe touches the checkout. Without it composer
-      # pins only the packages named in composer.json and lets the transitive
-      # Symfony packages float to their latest branch, which passes while
-      # proving nothing.
+      # Flex is global, so no recipe modifies the checkout. Without it, composer
+      # constrains only the packages named in composer.json, and the transitive
+      # Symfony packages resolve to their latest branch, so the run passes without
+      # a test of the intended versions.
       - name: Pin the Symfony branch
         run: |
           composer global config --no-plugins allow-plugins.symfony/flex true
@@ -49,12 +50,12 @@ jobs:
 
       - run: composer update --no-progress
 
-      # symfony/reprise needs PHP 8.4 and Symfony 7.4, so require-dev would make the lower
-      # legs uninstallable. Installed here, RepriseHostTest stops skipping and PHPStan reads
-      # the fixture kernel against the real class - the legs without it prove the other
-      # direction, that the skip and the ignored errors still hold.
+      # symfony/reprise needs PHP 8.4 and Symfony 7.4, so in require-dev it would make the
+      # lower matrix jobs uninstallable. With it installed here, RepriseHostTest runs and
+      # PHPStan reads the fixture kernel against the real class. The matrix jobs without it
+      # test the opposite condition: that the skip and the ignored errors still hold.
       - if: matrix.reprise
-        run: composer require --dev --no-progress "symfony/reprise:^0.8"
+        run: composer require --dev --no-progress "symfony/reprise:^1.0"
 
       - run: vendor/bin/phpstan analyse --no-progress
 
@@ -138,7 +139,7 @@ jobs:
           cache: npm
           cache-dependency-path: js/package-lock.json
 
-      - name: Install the bundle, which the fixture host serves from
+      - name: Install the bundle that the fixture host serves
         working-directory: .
         run: composer update --no-progress
 
@@ -146,8 +147,9 @@ jobs:
 
       - run: npm run build
 
-      # npm `files` cannot reach outside the package, so the shared capture script
-      # is copied in at build time. A missing copy is a silently inert package.
+      # npm `files` cannot reference a path outside the package, so the build copies
+      # the shared capture script. Without the copy, the published package cannot
+      # capture.
       - name: The shared capture script is in the publishable set
         run: |
           npm pack --dry-run --json | grep -q 'dist/capture/metadata.js'
@@ -161,8 +163,8 @@ jobs:
         env:
           QA_SCREENSHOTS_DIR: ${{ runner.temp }}/shots
 
-      # The real PHP reader over a tree no PHP wrote. This is what makes the
-      # layout a contract rather than one implementation's habit.
+      # The PHP reader over a tree that the npm package wrote. This shows that the
+      # layout is a contract and not the behaviour of one implementation.
       - name: The PHP reader parses the produced tree
         working-directory: .
         run: vendor/bin/phpunit --group contract

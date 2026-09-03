@@ -11,10 +11,10 @@ vendor/bin/bdi detect drivers && vendor/bin/phpunit --group e2e
 ```
 
 CI runs PHPStan and the non-E2E tests on PHP 8.2/Symfony 6.4, 8.3/7.4, 8.4/8.1 and 8.5/8.1. It runs
-the E2E group on 8.2/6.4 and 8.5/8.1, and the style check on 8.5. To reproduce one leg, select the
-branch in the same way as the workflow. `composer update` on its own constrains only the packages
-that `composer.json` names, and the transitive Symfony packages then resolve to their latest
-branch:
+the E2E group on 8.2/6.4 and 8.5/8.1, and the style check on 8.5. To reproduce one matrix job,
+select the branch in the same way as the workflow. `composer update` on its own constrains only the
+packages that `composer.json` names, and the transitive Symfony packages then resolve to their
+latest branch:
 
 ```
 composer global require symfony/flex
@@ -25,10 +25,11 @@ composer update
 The E2E group drives Chrome against `tests/Fixtures/app`, which the PHP built-in web server serves.
 
 `tests/Functional/StimulusControllersMapTest.php` runs StimulusBundle's own resolver over the
-fixture host, so it fails with the message a broken host gets rather than with a silent page. To see
-that, remove the `asset_mapper` prepend from `TacticMediaQaBundle::prependExtension()` and run it.
+fixture host, so on a broken host it fails with the StimulusBundle message and not with a page that
+does not respond. To reproduce that, remove the `asset_mapper` prepend from
+`TacticMediaQaBundle::prependExtension()` and run it.
 
-The capture package and the review image have separate gates:
+The capture package and the review image have separate test commands:
 
 ```
 cd js && npm ci && npm run build && npm test
@@ -36,7 +37,7 @@ npx playwright install chromium
 QA_SCREENSHOTS_DIR=/tmp/shots npm run test:integration
 ```
 
-Back at the repository root, which is also the build context the Dockerfile expects:
+From the repository root, which is the build context of the Dockerfile:
 
 ```
 QA_SCREENSHOTS_DIR=/tmp/shots vendor/bin/phpunit --group contract
@@ -49,9 +50,9 @@ group skips itself when `QA_SCREENSHOTS_DIR` is not set.
 
 ## The Flex recipe
 
-`recipe/` holds the recipe, and neither archive contains it. It is not published from here.
-`recipe/README.md` gives the target path in `symfony/recipes-contrib` and the reason the recipe
-registers `dev` and `test`.
+`recipe/` contains the recipe. Neither archive contains it, and it is not published from this
+repository. `recipe/README.md` gives the target path in `symfony/recipes-contrib` and the reason
+the recipe registers `dev` and `test`.
 
 ## Demo
 

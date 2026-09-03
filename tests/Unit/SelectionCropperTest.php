@@ -9,9 +9,9 @@ use PHPUnit\Framework\TestCase;
 use TacticMedia\QaBundle\Review\SelectionCropper;
 
 /**
- * The crop is what the agent actually looks at, so the geometry under test is the
- * padding, the clamp at the image edge, and the outline landing at the selection
- * once the crop origin is subtracted.
+ * The agent reads the crop, so the geometry under test is the padding, the clamp
+ * at the image edge, and the position of the outline at the selection after the
+ * crop origin is subtracted.
  */
 final class SelectionCropperTest extends TestCase
 {
@@ -53,7 +53,7 @@ final class SelectionCropperTest extends TestCase
         rmdir($this->root);
     }
 
-    #[TestDox('An interior selection gains 80 px of context on every side')]
+    #[TestDox('An interior selection receives 80 px of context on every side')]
     public function testTheCropIsPaddedAroundTheSelection(): void
     {
         $path = $this->cropper()->crop($this->source, ['x' => 150, 'y' => 120, 'width' => 60, 'height' => 40], 'note-1');
@@ -62,7 +62,7 @@ final class SelectionCropperTest extends TestCase
         self::assertSame([220, 200], \array_slice((array) getimagesize($this->root.'/'.$path), 0, 2));
     }
 
-    #[TestDox('A review directory outside the project is named absolutely')]
+    #[TestDox('A review directory outside the project gives an absolute path')]
     public function testAnOutsideReviewDirectoryYieldsAnAbsolutePath(): void
     {
         $path = (new SelectionCropper($this->reviewDirectory, '/somewhere/else'))
@@ -71,7 +71,7 @@ final class SelectionCropperTest extends TestCase
         self::assertSame($this->reviewDirectory.'/crops/note-1.png', $path);
     }
 
-    #[TestDox('The outline sits at the selection, shifted by the crop origin')]
+    #[TestDox('The outline is at the selection, offset by the crop origin')]
     public function testTheSelectionIsOutlined(): void
     {
         $path = $this->cropper()->crop($this->source, ['x' => 150, 'y' => 120, 'width' => 60, 'height' => 40], 'note-1');
@@ -85,7 +85,7 @@ final class SelectionCropperTest extends TestCase
         self::assertSame(0xFFFFFF, imagecolorat($crop, 110, 100));
     }
 
-    #[TestDox('A selection against the image edge clamps instead of over-reading')]
+    #[TestDox('A selection at the image edge is clamped to the image')]
     public function testTheCropClampsToTheImage(): void
     {
         $path = $this->cropper()->crop($this->source, ['x' => 0, 'y' => 0, 'width' => 50, 'height' => 50], 'note-2');

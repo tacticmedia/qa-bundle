@@ -12,13 +12,12 @@ use TacticMedia\QaBundle\Review\ScreenMetadata;
 use TacticMedia\QaBundle\Review\ScreenshotCatalog;
 
 /**
- * The real reader against a tree written by a foreign producer. Point
- * QA_SCREENSHOTS_DIR at what the npm package produced and run
- * `vendor/bin/phpunit --group contract`; without it there is nothing to check
- * and the group skips.
+ * Runs the PHP reader over a tree that a different producer wrote. Set
+ * QA_SCREENSHOTS_DIR to the tree that the npm package produced and run
+ * `vendor/bin/phpunit --group contract`; without it the group skips.
  *
- * This is the only test that proves the contract in docs/screenshot-sets.md is a
- * contract rather than a description of one implementation.
+ * This is the only test that shows that docs/screenshot-sets.md is a contract
+ * and not a description of one implementation.
  */
 #[Group('contract')]
 final class ProducedTreeTest extends TestCase
@@ -36,7 +35,7 @@ final class ProducedTreeTest extends TestCase
         $this->root = $root;
     }
 
-    #[TestDox('Every capture in the tree is readable, so nothing is silently dropped')]
+    #[TestDox('Every capture in the tree is readable, so the reader ignores nothing')]
     public function testTheReaderIgnoresNothing(): void
     {
         $ignored = $this->catalog()->allIgnored();
@@ -48,7 +47,7 @@ final class ProducedTreeTest extends TestCase
         self::assertSame(0, $ignored->total);
     }
 
-    #[TestDox('The five shipped viewports across light and dark discover as ten groups')]
+    #[TestDox('The five default viewports in light and dark give ten groups')]
     public function testTheTreeDiscoversAsGroups(): void
     {
         $groups = $this->catalog()->groups();
@@ -88,7 +87,7 @@ final class ProducedTreeTest extends TestCase
         self::assertGreaterThan(0, $checked);
     }
 
-    #[TestDox('The producer identity survives into the basename the review page reads')]
+    #[TestDox('The basename that the review page reads contains the producer identity')]
     public function testTheOriginIsRecoverableFromTheBasename(): void
     {
         $catalog = $this->catalog();

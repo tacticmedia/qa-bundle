@@ -1,4 +1,4 @@
-// Turbo is imported for its side effect: the annotate controller navigates with
-// visit(), which needs a started session.
+// Turbo is imported here so Drive starts on every page before any controller loads;
+// the module calls start() when it is first evaluated.
 import '@hotwired/turbo';
 import './bootstrap.js';

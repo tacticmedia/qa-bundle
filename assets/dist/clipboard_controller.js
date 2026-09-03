@@ -1,9 +1,10 @@
 import { Controller } from '@hotwired/stimulus';
 
 /*
- * Copies the text of another element to the clipboard, confirming on the button
- * itself. Hides itself where the clipboard API is unavailable (an insecure origin),
- * leaving the text on the page to select by hand.
+ * Copies the text of another element to the clipboard and shows a confirmation
+ * on the button. Where the clipboard API is unavailable, for example on an
+ * insecure origin, it hides the button and leaves the text on the page for manual
+ * selection.
  *
  * Usage (always via the Twig helpers, never hand-written data-* attributes):
  *   <div {{ stimulus_controller('qa-clipboard') }}>
