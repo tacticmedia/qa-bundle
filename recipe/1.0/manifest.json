@@ -1,0 +1,9 @@
+{
+    "bundles": {
+        "TacticMedia\\QaBundle\\TacticMediaQaBundle": ["dev", "test"]
+    },
+    "copy-from-recipe": {
+        "config/": "%CONFIG_DIR%/"
+    },
+    "aliases": ["qa-bundle"]
+}

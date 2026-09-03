@@ -58,10 +58,12 @@ composer require --dev tacticmedia/qa-bundle symfony/panther
 Only the capture trait uses `symfony/panther`, so the bundle lists it as a suggestion and not as a
 dependency. A project that needs the review page only can omit it.
 
-Enable it for `dev` only, in `config/bundles.php`:
+The Flex recipe writes the next two files. Where the host declines it, write them yourself.
+
+Enable the bundle for `dev` and `test`, in `config/bundles.php`:
 
 ```php
-TacticMedia\QaBundle\TacticMediaQaBundle::class => ['dev' => true],
+TacticMedia\QaBundle\TacticMediaQaBundle::class => ['dev' => true, 'test' => true],
 ```
 
 Import the routes under `when@dev`, in `config/routes/qa.yaml`:
@@ -72,6 +74,11 @@ when@dev:
         resource: '@TacticMediaQaBundle/config/routes.php'
         type: php
 ```
+
+The bundle must be registered wherever `assets/controllers.json` names it, which is every
+environment. A host without the line gets `Could not find an asset mapper path that points to the
+"annotate" controller`. Install with `--no-scripts` and add the line first, or see
+[docs/host-setup.md](docs/host-setup.md#the-bundle-and-controllersjson-must-agree).
 
 Use the trait once, on your journey base class:
 

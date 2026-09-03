@@ -24,6 +24,10 @@ composer update
 
 The E2E group drives Chrome against `tests/Fixtures/app`, which the PHP built-in web server serves.
 
+`tests/Functional/StimulusControllersMapTest.php` runs StimulusBundle's own resolver over the
+fixture host, so it fails with the message a broken host gets rather than with a silent page. To see
+that, remove the `asset_mapper` prepend from `TacticMediaQaBundle::prependExtension()` and run it.
+
 The capture package and the review image have separate gates:
 
 ```
@@ -42,6 +46,12 @@ docker build -f docker/review/Dockerfile -t qa-review:local .
 The `contract` group runs the PHP reader over a tree that the npm producer wrote. This confirms that
 the layout is a contract between the two producers and not the behaviour of one implementation. The
 group skips itself when `QA_SCREENSHOTS_DIR` is not set.
+
+## The Flex recipe
+
+`recipe/` holds the recipe, and neither archive contains it. It is not published from here.
+`recipe/README.md` gives the target path in `symfony/recipes-contrib` and the reason the recipe
+registers `dev` and `test`.
 
 ## Demo
 

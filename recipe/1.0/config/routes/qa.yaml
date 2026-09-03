@@ -1,0 +1,4 @@
+when@dev:
+    qa:
+        resource: '@TacticMediaQaBundle/config/routes.php'
+        type: php

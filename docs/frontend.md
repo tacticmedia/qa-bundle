@@ -10,12 +10,17 @@ registered in it. This applies to each build tool. The Twig helpers in StimulusB
 on the build tool, so the markup is the same in each host and only the delivery of the JavaScript
 changes.
 
-On **AssetMapper** no action is necessary, if your Stimulus entrypoint is named `app`. The default
-`scripts` block calls `importmap('app')`, which throws an exception where the host has no such
-entrypoint. If your entrypoint has a different name, override the block in the same way as the
+On **AssetMapper** no build step is necessary, if your Stimulus entrypoint is named `app`. The
+default `scripts` block calls `importmap('app')`, which throws an exception where the host has no
+such entrypoint. If your entrypoint has a different name, override the block in the same way as the
 bundler hosts below. Flex writes the `controllers.json` block and adds `@hotwired/stimulus` and
-`@hotwired/turbo` to `importmap.php`, and the bundle registers `assets/dist` as an AssetMapper
-path.
+`@hotwired/turbo` to `importmap.php`.
+
+The bundle registers `assets/dist` as an AssetMapper path from `prependExtension()`, so it does that
+only in an environment where `config/bundles.php` enables the bundle. `controllers.json` names the
+package in every environment, and StimulusBundle stops the container build where the two disagree.
+[host-setup.md](host-setup.md#the-bundle-and-controllersjson-must-agree) gives the message and the
+two host states that satisfy it.
 
 On **Webpack Encore** and **Symfony Reprise** the controllers resolve from `node_modules`. Flex
 writes the same `controllers.json` block, and adds the package link and its peer dependencies to

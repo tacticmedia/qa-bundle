@@ -59,12 +59,15 @@
     },
     "archive": {
         "exclude": [
-            ".github",
+            "/.claude",
             "/.dockerignore",
+            "/.github",
+            "/.idea",
             "/demo",
             "/docker",
             "/docs/assets",
             "/js",
+            "/recipe",
             "/tests"
         ]
     },

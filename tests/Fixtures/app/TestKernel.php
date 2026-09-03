@@ -73,6 +73,11 @@ final class TestKernel extends Kernel
             ->tag('twig.runtime');
         $services->set('twig.extension.importmap', ImportMapExtension::class)
             ->tag('twig.extension');
+
+        // StimulusBundle inlines the generator into its loader compiler, which removes the
+        // definition the test container would expose.
+        $services->alias('qa.tests.controllers_map_generator', 'stimulus.asset_mapper.controllers_map_generator')
+            ->public();
     }
 
     protected function configureRoutes(RoutingConfigurator $routes): void

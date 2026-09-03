@@ -1,8 +1,11 @@
+/.claude export-ignore
 /.dockerignore export-ignore
 /.github export-ignore
+/.idea export-ignore
 /demo export-ignore
 /docker export-ignore
 /docs/assets export-ignore
 /js export-ignore
+/recipe export-ignore
 /tests export-ignore
 *.webp filter=lfs diff=lfs merge=lfs -text

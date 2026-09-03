@@ -1,0 +1,6 @@
+# Both options have the values below. review_dir must stay outside screenshots_dir,
+# which every journey run empties.
+#when@dev:
+#    qa:
+#        screenshots_dir: '%kernel.project_dir%/var/screenshots'
+#        review_dir: '%kernel.project_dir%/var/review'

@@ -30,6 +30,49 @@ block the page renders, but it does not respond to a selection or to a key**:
 The synchronizer rebuilds the complete file from the installed `symfony-ux` packages. It removes a
 manually added entry for a package that does not have the keyword on the next composer run.
 
+## The bundle and controllers.json must agree
+
+`assets/controllers.json` names the package for every environment, because Composer writes it and
+Composer knows nothing about environments. The AssetMapper path that each entry resolves against
+comes from `TacticMediaQaBundle::prependExtension()`, which runs only where `config/bundles.php`
+enables the bundle. Where the two disagree, StimulusBundle stops the container build:
+
+```
+In ControllersMapGenerator.php line 147:
+  Could not find an asset mapper path that points to the "annotate" controller
+  in package "tacticmedia/qa-bundle", defined in controllers.json.
+```
+
+**Wherever `assets/controllers.json` names the package, the bundle must be registered.** Two host
+states satisfy that:
+
+- `composer require --dev` with `['dev' => true, 'test' => true]`. Build the production assets
+  after `composer install --no-dev`, which makes Flex remove the block first.
+- `composer require` with `['all' => true]`, for a pipeline that runs `asset-map:compile` while the
+  development dependencies are installed.
+
+`test` matters as much as `dev`. A host that opens the page from a `WebTestCase` builds a container
+from the same `controllers.json`.
+
+To recover a host that already shows the error, add the missing line to `config/bundles.php` and run
+`bin/console cache:clear`. To install into a host that has no recipe, keep Composer away from the
+container until the line exists:
+
+```
+composer require --dev --no-scripts tacticmedia/qa-bundle symfony/panther
+# add the bundles.php line and the routes
+composer install
+```
+
+`--no-dev --no-scripts` together leave the opposite state: the block stays in the committed file
+after the package is gone, and the reader reports the package instead of the path.
+
+```
+Could not find package "tacticmedia/qa-bundle" referred to from controllers.json.
+```
+
+A deploy that runs the Composer scripts does not meet this, because Flex rewrites the file.
+
 ## The capture trait
 
 `JourneyScreenshots` goes on one shared journey base class, and on no other class. The clear-once

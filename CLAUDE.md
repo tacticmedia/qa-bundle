@@ -146,6 +146,14 @@ no list to keep synchronised between the trait and the catalog.
   rebuilds the host's `assets/controllers.json` from the installed packages that have that keyword,
   and removes each entry it cannot match to one. Without the keyword, the next composer run removes
   the block from the host, and the page stops responding.
+- **`controllers.json` and `config/bundles.php` are one contract, and the host holds both halves.**
+  Composer writes the block for every environment. `assets/dist` reaches AssetMapper only from
+  `prependExtension()`, which runs where the host enables the bundle. Where they disagree,
+  StimulusBundle stops the container build with `Could not find an asset mapper path that points to
+  the "annotate" controller`. The recipe under `recipe/` registers `dev` and `test` for that reason,
+  and `tests/Functional/StimulusControllersMapTest.php` fails if the registration or a controller
+  name moves. Nothing else registers that path: `StimulusExtension::prepend()` registers only
+  stimulus-bundle's own directory, and there is no cache warmer.
 - **`peerDependencies` in `assets/package.json` is the data that reaches a bundler host.** For a
   Webpack Encore or Reprise host, Flex uses the `package.json` branch, ignores `symfony.importmap`
   and copies the peers into the host's `devDependencies`. Without them `@hotwired/turbo` does not
