@@ -12,8 +12,8 @@ use TacticMedia\QaBundle\Review\ScreenMetadata;
 use TacticMedia\QaBundle\Review\ScreenshotCatalog;
 
 /**
- * Runs the PHP reader over a tree that a different producer wrote. Set
- * QA_SCREENSHOTS_DIR to the tree that the npm package produced and run
+ * Runs the PHP reader over a tree that a producer wrote. Set QA_SCREENSHOTS_DIR
+ * to the tree that the npm package or a capture E2E test produced and run
  * `vendor/bin/phpunit --group contract`; without it the group skips.
  *
  * This is the only test that shows that docs/screenshot-sets.md is a contract

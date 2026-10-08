@@ -14,7 +14,7 @@ use TacticMedia\QaBundle\Review\ScreenshotGroup;
 
 /**
  * The catalog recovers a capture's origin from its filename alone, so the grammar
- * produced by JourneyScreenshots::fileSafe() is the contract under test. Modes and
+ * produced by ScreenshotTree::fileSafe() is the contract under test. Modes and
  * viewports are the directories that the tree contains, and the discovered order
  * follows from them.
  */

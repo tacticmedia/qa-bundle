@@ -3,13 +3,14 @@
 The review page at `/_dev/screenshots` identifies a capture from its path and basename only. You can
 therefore review the output of any producer that writes this layout.
 
-This document is the contract. The PHPUnit trait in `tacticmedia/qa-bundle`
-(`TacticMedia\QaBundle\Test\JourneyScreenshots`) and the `@tacticmedia/qa-capture` npm package are
-two implementations of it.
+This document is the contract. The two PHPUnit traits in `tacticmedia/qa-bundle`
+(`TacticMedia\QaBundle\Test\JourneyScreenshots` for Panther and
+`TacticMedia\QaBundle\Test\PlaywrightJourneyScreenshots` for playwright-php) and the
+`@tacticmedia/qa-capture` npm package are three implementations of it.
 
 ## Vocabulary
 
-The basename contains two identity parts. The PHP trait sets them from a test class and a test
+The basename contains two identity parts. The PHP traits set them from a test class and a test
 method. The contract identifies them by function, and a producer can derive them from any source:
 
 - **journey** - the file or suite that supplied the captures. The review sidebar and the generated
@@ -69,7 +70,7 @@ Optional:
 | Field | Type | Meaning |
 |---|---|---|
 | `elements` | array | Element boxes and identities. Absent or empty means annotations resolve to coordinates only. |
-| `testClass` | string or null | Producer-side identifier of the journey. The PHP trait writes a fully qualified class name, the npm package writes the journey slug. Stored but not currently rendered; the brief names the journey from the basename. |
+| `testClass` | string or null | Producer-side identifier of the journey. The PHP traits write a fully qualified class name, the npm package writes the journey slug. Stored but not currently rendered; the brief names the journey from the basename. |
 | `testFile` | string or null | Path to the source file that produced the capture, project-relative when possible. The agent brief prints it. |
 
 The reader ignores unknown top-level keys, so a producer can add its own keys. It truncates a
@@ -134,7 +135,7 @@ from an earlier run.
 
 `QA_SCREENSHOTS_DIR` names the root. A producer that layers a root option on top of it must give
 the environment variable precedence, so a per-run override gives the same root to the setup step
-and to the capture step. The PHP trait's `screenshotRoot()` is an override and not a layered option,
+and to the capture step. The PHP traits' `screenshotRoot()` is an override and not a layered option,
 so a host that replaces it also replaces the environment handling.
 
 ## Versioning

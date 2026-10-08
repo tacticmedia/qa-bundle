@@ -240,6 +240,8 @@
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/var-exporter" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/tacticmedia/qa-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/twig/twig" />
+      <excludeFolder url="file://$MODULE_DIR$/demo/vendor/playwright-php/playwright" />
+      <excludeFolder url="file://$MODULE_DIR$/vendor/playwright-php/playwright" />
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />

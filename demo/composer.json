@@ -82,6 +82,7 @@
     "require-dev": {
         "dbrekelmans/bdi": "^1.4",
         "phpunit/phpunit": "^13.3",
+        "playwright-php/playwright": "^1.5",
         "symfony/panther": "^2.4"
     }
 }

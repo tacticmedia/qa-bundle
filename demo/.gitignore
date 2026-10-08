@@ -28,3 +28,7 @@
 /playwright/test-results/
 /playwright/playwright-report/
 ###< playwright ###
+
+###> playwright-php ###
+/test-failures/
+###< playwright-php ###

@@ -6,7 +6,7 @@ namespace TacticMedia\QaBundle\Review;
 
 /**
  * Reads the screenshot tree that the journeys write
- * ({@see \TacticMedia\QaBundle\Test\JourneyScreenshots}). The basename gives the
+ * ({@see \TacticMedia\QaBundle\Test\ScreenshotTree}). The basename gives the
  * origin of the capture: test class, method, capture sequence and screen label.
  * The .json sidecar beside each PNG gives the state of the captured page
  * ({@see ScreenMetadata}).

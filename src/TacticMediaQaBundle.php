@@ -14,8 +14,8 @@ use Symfony\Component\Security\Csrf\SameOriginCsrfTokenManager;
 use TacticMedia\QaBundle\Controller\ScreenshotReviewController;
 
 /**
- * Registers the screenshot review page and its services. The capture trait
- * ({@see Test\JourneyScreenshots}) does not use them, because it runs in PHPUnit
+ * Registers the screenshot review page and its services. The capture traits
+ * ({@see Test\ScreenshotTree}) do not use them, because they run in PHPUnit
  * with no container.
  *
  * The host selects the environment: enable the bundle for `dev` and `test` in

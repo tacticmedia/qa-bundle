@@ -11,7 +11,7 @@ use TacticMedia\QaBundle\Test\JourneyScreenshots;
 /**
  * The capture trait runs with no container, so the contract is what it reads from
  * the environment and what a host can override. The capture needs a browser and is
- * tested by the journeys.
+ * tested by PantherCaptureE2eTest.
  *
  * Use of the trait here also runs its #[Before] hook, which empties the tree at
  * the start of the run.
@@ -75,6 +75,7 @@ final class JourneyScreenshotsTest extends TestCase
         self::assertContains('landscape', $orientations);
     }
 
+    #[TestDox('The default colour schemes are light and dark')]
     public function testTheDefaultColorSchemes(): void
     {
         self::assertSame(['light', 'dark'], self::screenshotColorSchemes());

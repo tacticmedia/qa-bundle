@@ -4,6 +4,7 @@
          bootstrap="tests/bootstrap.php"
          cacheDirectory=".phpunit.cache"
          colors="true"
+         defaultTestSuite="panther"
          failOnWarning="true">
     <php>
         <ini name="display_errors" value="1"/>
@@ -11,9 +12,13 @@
         <server name="APP_ENV" value="test" force="true"/>
         <server name="SHELL_VERBOSITY" value="-1"/>
     </php>
+    <!-- Each journey empties the tree, so a run selects one producer. -->
     <testsuites>
-        <testsuite name="journeys">
-            <directory>tests</directory>
+        <testsuite name="panther">
+            <file>tests/E2e/TacticMediaJourneyE2eTest.php</file>
+        </testsuite>
+        <testsuite name="playwright">
+            <file>tests/E2e/TacticMediaPlaywrightJourneyE2eTest.php</file>
         </testsuite>
     </testsuites>
     <extensions>

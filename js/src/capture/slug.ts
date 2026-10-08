@@ -3,7 +3,7 @@ import { basename } from 'node:path';
 const SCENARIO_CAP = 80;
 
 /**
- * Same behaviour as JourneyScreenshots::fileSafe(): a sequence of characters
+ * Same behaviour as ScreenshotTree::fileSafe(): a sequence of characters
  * outside the label grammar becomes one hyphen. The characters are replaced and
  * not removed, so two different labels stay different.
  */

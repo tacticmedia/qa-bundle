@@ -250,6 +250,8 @@
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/security-csrf" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/filesystem" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/var-dumper" />
+      <path value="$PROJECT_DIR$/vendor/playwright-php/playwright" />
+      <path value="$PROJECT_DIR$/demo/vendor/playwright-php/playwright" />
     </include_path>
   </component>
   <component name="PhpStan">
@@ -264,6 +266,7 @@
   <component name="PhpUnit">
     <phpunit_settings>
       <PhpUnitSettings custom_loader_path="$PROJECT_DIR$/vendor/autoload.php" />
+      <PhpUnitSettings custom_loader_path="$PROJECT_DIR$/demo/vendor/autoload.php" />
     </phpunit_settings>
   </component>
   <component name="PsalmOptionsConfiguration">

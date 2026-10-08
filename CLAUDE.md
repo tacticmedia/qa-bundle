@@ -5,14 +5,16 @@
 The README states the problem and the two halves. `docs/how-it-works.md` gives the design in seven
 steps, from the two-pass measurement to the prompt template, and `docs/screenshot-sets.md` is the
 on-disk contract between the producers and the review. This file contains what those documents do
-not: where the code is, the conventions that keep the two producers and the review consistent, and
+not: where the code is, the conventions that keep the producers and the review consistent, and
 how the test suite is laid out.
 
 ## Where the code is
 
-**Capture** - `src/Test/JourneyScreenshots.php`, a PHPUnit trait for a Panther journey. It does not
-use the container. `js/` is the Playwright producer of the same tree, and
-`resources/capture/metadata.js` is the DOM script that both producers evaluate.
+**Capture** - two PHPUnit traits: `src/Test/JourneyScreenshots.php` for a Panther journey and
+`src/Test/PlaywrightJourneyScreenshots.php` for a playwright-php journey. Each contains only browser
+calls and takes the layout, the sidecar and the overrides from `src/Test/ScreenshotTree.php`. They
+do not use the container. `js/` is the Playwright producer of the same tree, and
+`resources/capture/metadata.js` is the DOM script that each producer evaluates.
 
 **Review** - `src/Controller/ScreenshotReviewController.php` and `src/Review/*`, the page at
 `/_dev/screenshots`. It uses the container and only reads the tree. `templates/prompt.txt.twig`
@@ -20,30 +22,31 @@ contains the wording of the brief.
 
 ## Conventions to keep
 
-- **The DOM metadata script has one source: `resources/capture/metadata.js`.** The PHP trait reads
+- **The DOM metadata script has one source: `resources/capture/metadata.js`.** The PHP traits read
   it at runtime and the npm build copies it into `dist/capture/`. Neither location contains a second
-  copy. It must stay an **expression** (no trailing semicolon), because both producers evaluate it
+  copy. It must stay an **expression** (no trailing semicolon), because each producer evaluates it
   for its value. The tag set and the attribute list are at the top of the file; the loop body
   applies them. `resources/` is not archive-excluded, so the installed package contains it.
 - **The on-disk layout is public API. It is specified in `docs/screenshot-sets.md` and
-  `docs/sidecar.schema.json`.** Two producers write it. A change to a grammar, or to the meaning of
-  a required field, breaks the other producer and each stored note. An added optional sidecar field,
-  mode or viewport does not.
+  `docs/sidecar.schema.json`.** Three producers write it. A change to a grammar, or to the meaning
+  of a required field, breaks the other producers and each stored note. An added optional sidecar
+  field, mode or viewport does not.
 - **Three items change together when the sidecar shape changes:** `MetadataElement`/`ScreenMetadata`,
   `docs/sidecar.schema.json`, and the ajv test in `js/tests/unit/sidecar.spec.ts`. A test enforces
   the schema; it is not only documentation.
 - **`tests/Contract/ProducedTreeTest.php` shows that the contract holds.** It runs the PHP reader
-  over a tree that the npm package wrote, and it skips itself when `QA_SCREENSHOTS_DIR` is not set.
-  If it only skips, the contract is not tested.
+  over a tree that a producer wrote, and it skips itself when `QA_SCREENSHOTS_DIR` is not set. If it
+  only skips, the contract is not tested, so CI runs it with `--fail-on-skipped` over the tree of
+  each producer.
 - **There are two npm packages, with two different functions.** `assets/package.json` is
   `@tacticmedia/qa-bundle`, the Stimulus controllers that the review page loads. `js/package.json`
   is `@tacticmedia/qa-capture`, the Playwright producer. Do not use either name for the other
   package.
 - **The five default viewports are one list in two places.** A layout defect usually occurs at one
-  width, so the reviewer needs each breakpoint. `JourneyScreenshots::screenshotViewports()` and
+  width, so the reviewer needs each breakpoint. `ScreenshotTree::screenshotViewports()` and
   `DEFAULT_VIEWPORTS` in `js/src/capture/types.ts` contain the same values in the same order, and
   `tests/Contract/ProducedTreeTest.php` expects ten groups from them. A change goes to both.
-- **One clearing producer for each root in each run.** The two producers alternate; they do not
+- **One clearing producer for each root in each run.** Producers alternate; they do not
   accumulate. `docs/screenshot-sets.md`, "Clearing semantics", is the contract.
 - **The review reports the entries it ignored.** `ScreenshotCatalog::ignored()`/`allIgnored()`
   supply a list of ignored entries on the group page and the empty page, and the annotate page
@@ -51,22 +54,28 @@ contains the wording of the brief.
   appear as an empty page with no explanation.
 - **The prompt is producer-neutral.** It contains no producer name and no framework name. The labels
   are journey and scenario. A host that needs different wording overrides `prompt.txt.twig`.
-- **`symfony/panther` is a suggestion and a dev dependency. Do not put it in `require`.** Only the
-  capture trait uses it, and a requirement adds php-webdriver and `ext-zip` to the container image
-  that serves the review page.
+- **`symfony/panther` and `playwright-php/playwright` are suggestions and dev dependencies. Do not
+  put them in `require`.** Only the capture traits use them. A requirement adds php-webdriver and
+  `ext-zip`, or `symfony/process` and a Node bridge, to the container image that serves the review
+  page.
 - **In the review image, `/data` is the root of the reviewed project.**
   `App\MountedProjectPathsPass` sets the catalog and the cropper to it, so the brief prints paths
   the host can open; `docker/review/README.md`, "The mount contract", gives the host side.
 - **`docker/review/composer.lock` is committed.** After a change to the dependencies of the bundle,
   run `composer update` in `docker/review/`. Nothing detects an outdated lock; it breaks the image
   build only where `cache:warmup` or the review page needs the missing package.
-- **The trait must not use the container.** A project can use the capture without registration of
-  the bundle, and that is one of the two functions of the package. Configuration comes from
-  `protected static` methods that a test case overrides, and from one environment variable. It does
-  not come from bundle configuration.
-- **Use the trait once, on a shared journey base class.** The clear-once guard is a trait static,
-  which PHP copies into each class that uses the trait directly; `docs/host-setup.md`, "The capture
-  trait", gives the consequences, including the data-provider limit.
+- **The capture traits must not use the container.** A project can use the capture without
+  registration of the bundle, and that is one of the two functions of the package. Configuration
+  comes from `protected static` methods that a test case overrides, and from one environment
+  variable. It does not come from bundle configuration.
+- **Use one capture trait once, on a shared journey base class.** The clear-once guard is a trait
+  static, which PHP copies into each class that uses the trait directly; `docs/host-setup.md`, "The
+  capture traits", gives the consequences, including the data-provider limit. Both traits declare
+  `captureFullPageScreenshot()`, so one class cannot use both.
+- **The playwright-php trait has three library constraints.** The bridge writes the PNG from its own
+  working directory, so the path is absolute. A null `colorScheme` is dropped and not sent, so the
+  reset is `'no-override'`. A function string runs through `eval()` in the page, which a strict
+  content security policy blocks, so each `evaluate()` call passes an expression.
 - **The review does not write into the screenshot tree.** Notes and crops are written under
   `review_dir`, and the crops are regenerated on each prompt build.
 - **The group grid does not parse a sidecar.** It reads filenames only. A sidecar contains each
@@ -142,13 +151,16 @@ in that state, or the documented override is untested.
 below PHP 8.4. Locally it skips unless `symfony/reprise` is required.
 
 The `node` CI job builds the npm package, runs its unit specs, captures against the PHP fixture host
-and then runs `--group contract` over that tree. The `docker` job builds the review image and tests
-the empty state on each push and pull request, and publishes to ghcr.io on push.
+and then runs `--group contract` over that tree. The `panther` and `playwright` jobs do the same
+with `PantherCaptureE2eTest` and `PlaywrightCaptureE2eTest`, which capture the fixture host with
+each PHP trait. The `playwright` job runs `vendor/bin/playwright-install` after `composer update`,
+because the library keeps its npm packages in `vendor/`. The `docker` job builds the review image
+and tests the empty state on each push and pull request, and publishes to ghcr.io on push.
 
 CI runs PHPStan and the non-e2e group on PHP 8.2/Symfony 6.4, 8.3/7.4, 8.4/8.1 and 8.5/8.1. It runs
-the e2e group on 8.2/6.4 and 8.5/8.1 only, and installs `symfony/reprise` on the two highest
-matrix jobs only. A separate style job runs `composer validate --strict` and `composer cs:check`
-on 8.5.
+the e2e group on 8.2/6.4 and 8.5/8.1 only, split between the `panther` job and the `playwright`
+job, and installs `symfony/reprise` on the two highest matrix jobs only. A separate style job runs
+`composer validate --strict` and `composer cs:check` on 8.5.
 
 To select a branch, use global flex and `composer config extra.symfony.require`, as
 `.github/workflows/ci.yaml` does. `composer update` on its own constrains only the packages that
@@ -173,6 +185,10 @@ Two rules for driving the browser, both used in `tests/E2e/ScreenshotReviewE2eTe
 `demo/playwright/` is the Playwright version of the demo journey. It consumes `js/` through a
 `file:` dependency with `install-links=true`. A symlinked copy resolves a second `@playwright/test`,
 and Playwright does not load twice. After you rebuild `js/`, run `npm install` there again.
+
+`demo/tests/E2e/TacticMediaPlaywrightJourneyE2eTest.php` is the playwright-php version.
+`demo/phpunit.dist.xml` has one test suite for each PHP journey, with `panther` as the default,
+because each journey empties the tree; `--testsuite playwright` selects the other.
 
 `demo/` is a Symfony 8.1 application on AssetMapper and PHP 8.4 that requires the bundle through a
 path repository. Its `vendor/` and `var/` directories are git-ignored, so run `composer install`

@@ -740,7 +740,7 @@ use Symfony\Component\Config\Loader\ParamConfigurator as Param;
  * }
  * @psalm-type QaConfig = array{
  *     screenshots_dir?: scalar|Param|null, // Tree the journeys write, and the review reads. // Default: "%kernel.project_dir%/var/screenshots"
- *     review_dir?: scalar|Param|null, // Review notes and the crops the prompt points at. Never inside screenshots_dir, which every run empties. // Default: "%kernel.project_dir%/var/review"
+ *     review_dir?: scalar|Param|null, // Review notes and the crops the prompt refers to. Never inside screenshots_dir, which every run empties. // Default: "%kernel.project_dir%/var/review"
  * }
  * @psalm-type SymfonycastsTailwindConfig = array{
  *     input_css?: list<scalar|Param|null>,

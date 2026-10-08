@@ -46,7 +46,7 @@ final class ScreenshotReviewController extends AbstractController
     public const CSRF_TOKEN = 'screenshot-review';
 
     /**
-     * {name} accepts the same character set that JourneyScreenshots::fileSafe()
+     * {name} accepts the same character set that ScreenshotTree::fileSafe()
      * produces. That set excludes "." and "/", so path traversal is not possible.
      * {mode} and {viewport} use the same method.
      */

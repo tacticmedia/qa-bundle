@@ -6,7 +6,7 @@ namespace TacticMedia\QaBundle\Review;
 
 /**
  * The .json sidecar that a journey writes beside each screenshot
- * ({@see \TacticMedia\QaBundle\Test\JourneyScreenshots}). Capture time is the
+ * ({@see \TacticMedia\QaBundle\Test\ScreenshotTree}). Capture time is the
  * only point at which the live DOM is available. A producer captures at CSS
  * scale, so these CSS pixels are the pixels of the PNG.
  *

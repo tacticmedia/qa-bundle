@@ -29,10 +29,12 @@ complete, generate a prompt for a coding agent.
 The bundle has two halves. They operate independently.
 
 **Capture** writes a full-page PNG of each settled screen, at five viewports in light and dark, with
-a JSON sidecar of element geometry beside each image. `TacticMedia\QaBundle\Test\JourneyScreenshots`
-is a PHPUnit trait for a Symfony Panther journey. It does not use the container and does not need
-bundle registration. [`@tacticmedia/qa-capture`](js/) performs the same capture from Playwright, for
-a project that has no PHP.
+a JSON sidecar of element geometry beside each image. Two PHPUnit traits do this:
+`TacticMedia\QaBundle\Test\JourneyScreenshots` for a Symfony Panther journey, and
+`TacticMedia\QaBundle\Test\PlaywrightJourneyScreenshots` for a
+[playwright-php](https://github.com/playwright-php/playwright) journey. They do not use the
+container and do not need bundle registration. [`@tacticmedia/qa-capture`](js/) performs the same
+capture from Playwright, for a project that has no PHP.
 
 **Review** is a page at `/_dev/screenshots` that the host enables in `dev`. It lists the captures,
 takes a rectangle and a note on any of them, and generates a plain-text prompt. The page runs in
@@ -53,8 +55,16 @@ PHP 8.2 or later, `ext-gd`, and Symfony 6.4, 7.4, or 8.1 and later.
 composer require --dev tacticmedia/qa-bundle symfony/panther
 ```
 
-Only the capture trait uses `symfony/panther`, so the bundle lists it as a suggestion and not as a
-dependency. A project that needs the review page only can omit it.
+To capture with playwright-php instead, which needs Node.js 20 or later:
+
+```
+composer require --dev tacticmedia/qa-bundle playwright-php/playwright
+vendor/bin/playwright-install chromium
+```
+
+Only the capture traits use `symfony/panther` and `playwright-php/playwright`, so the bundle lists
+them as suggestions and not as dependencies. A project that needs the review page only can omit
+both.
 
 The bundle requires `symfony/security-csrf`. On a host that has no other dependency on that
 package, a `--dev` install makes it dev-only, FrameworkBundle then leaves CSRF protection off, and
@@ -99,6 +109,22 @@ abstract class JourneyTestCase extends PantherTestCase
 Call `captureFullPageScreenshot($client, 'Cart with two items')` at each point in a journey where
 the screen has settled. Run the journeys, start the application, and open `/_dev/screenshots`.
 
+With playwright-php, use the other trait and give the method the page:
+
+```php
+use Playwright\Testing\PlaywrightTestCase;
+use TacticMedia\QaBundle\Test\PlaywrightJourneyScreenshots;
+
+abstract class JourneyTestCase extends PlaywrightTestCase
+{
+    use PlaywrightJourneyScreenshots;
+}
+```
+
+Call `captureFullPageScreenshot($this->page, 'Cart with two items')`. playwright-php does not start
+the application, so serve it before the journeys run.
+[docs/host-setup.md](docs/host-setup.md#the-capture-traits) gives the details.
+
 Flex writes the Stimulus controllers into `assets/controllers.json` during installation, but only
 where that file exists. Without the block the page renders and does not respond to a selection or
 to a key. [docs/host-setup.md](docs/host-setup.md) gives the block and the rest of the host setup.
@@ -117,7 +143,7 @@ to a key. [docs/host-setup.md](docs/host-setup.md) gives the block and the rest 
 | [docs/development.md](docs/development.md) | Test commands, CI matrix jobs, the npm package, the review image, the demo. |
 | [js/README.md](js/README.md) | `@tacticmedia/qa-capture`, the Playwright producer. |
 | [docker/review/README.md](docker/review/README.md) | `ghcr.io/tacticmedia/qa-review`, the review image. |
-| [demo/README.md](demo/README.md) | A Symfony 8.1 host that runs both producers and the container. |
+| [demo/README.md](demo/README.md) | A Symfony 8.1 host that runs each producer and the container. |
 
 ## Contributions
 

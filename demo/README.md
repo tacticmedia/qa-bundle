@@ -3,13 +3,14 @@
 A Symfony 8.1 application on AssetMapper and PHP 8.4 that consumes the bundle through a Composer
 path repository. It contains one Panther journey,
 `tests/E2e/TacticMediaJourneyE2eTest.php`, which opens each page of https://tacticmedia.com.au and
-captures each screen after it settles. It also serves the review page for the result. The
+captures each screen after it settles. `tests/E2e/TacticMediaPlaywrightJourneyE2eTest.php` is the
+same journey on playwright-php. It also serves the review page for the result. The
 application has no pages of its own. Apart from the `/_error` preview from the framework, each route
 it serves is the `/_dev/screenshots*` route of the bundle.
 
-`playwright/` contains the same journey for Playwright and writes the same tree. Each producer gives
-the same six labelled screens in the review, which shows that the layout in
-`docs/screenshot-sets.md` is a contract and not a description of the PHP trait. The basenames
+`playwright/` contains the same journey for Playwright on Node.js and writes the same tree. Each
+producer gives the same six labelled screens in the review, which shows that the layout in
+`docs/screenshot-sets.md` is a contract and not a description of one PHP trait. The basenames
 contain the name of the test that produced them, so a note written against the tree of one producer
 does not match the tree of the other.
 
@@ -17,6 +18,7 @@ does not match the tree of the other.
 
 - PHP 8.4 or newer with `ext-gd`
 - Google Chrome
+- Node.js 20 or newer, for the playwright-php journey and for `playwright/`
 - Network access to https://tacticmedia.com.au
 
 ## Set up
@@ -42,12 +44,28 @@ styles.
 vendor/bin/phpunit
 ```
 
+`phpunit.dist.xml` has one test suite for each PHP journey, and `panther` is the default. Each
+journey empties the tree, so one run uses one producer.
+
 The journey opens the site, follows the navigation links and calls `captureFullPageScreenshot()` at
 each settled screen. Each capture is written to `var/screenshots/<mode>/<WxH>/<orientation>/` at
 five viewports in light and dark, which are the defaults of the trait. Each run empties the tree, so
 the tree contains the latest run only.
 
-## Capture with Playwright instead
+## Capture with playwright-php instead
+
+```
+vendor/bin/playwright-install chromium
+vendor/bin/phpunit --testsuite playwright
+```
+
+`playwright-install` puts the npm packages of the library into `vendor/`, so run it again after each
+`composer install` that replaces `vendor/`. The journey extends
+`Playwright\Testing\PlaywrightTestCase` and uses `PlaywrightJourneyScreenshots`. It has the same six
+labels as the Panther journey and writes to the same `var/screenshots`. When a step fails, the
+library saves a screenshot of the page in `test-failures/`.
+
+## Capture with Playwright on Node.js instead
 
 ```
 cd ../js && npm ci && npm run build
@@ -60,7 +78,7 @@ because `.npmrc` sets `install-links`. After you rebuild `js/`, run `npm install
 symlinked package resolves `@playwright/test` from its own `node_modules`, and Playwright does not
 load twice.
 
-The spec repeats each stage of the PHP journey and uses the same six labels.
+The spec repeats each stage of the PHP journeys and uses the same six labels.
 `playwright.config.ts` defaults `QA_SCREENSHOTS_DIR` to the `var/screenshots` directory of this
 application when the variable is not set. **The two producers alternate; they do not accumulate.**
 Each one empties the tree when

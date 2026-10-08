@@ -120,6 +120,6 @@ The integration suite drives the PHP fixture host of the bundle and reads the tr
 group then runs the PHP reader over the same directory.
 
 `src/capture/metadata.js` does not exist. The DOM metadata script is `resources/capture/metadata.js`
-at the repository root. The PHP trait uses the same file without modification, and `npm run build`
+at the repository root. The PHP traits use the same file without modification, and `npm run build`
 copies it into `dist/capture/`. The npm `files` field cannot reference a path outside the package
 root, so the copy is the method of sharing. Do not create a second version of the file.

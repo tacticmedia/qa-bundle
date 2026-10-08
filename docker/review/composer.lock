@@ -3738,7 +3738,7 @@
             "dist": {
                 "type": "path",
                 "url": "../..",
-                "reference": "7d5cb7d7304f710047d3d98c1806922a7eb8c903"
+                "reference": "49391c3c72fd3ce3f64a6afc2761f18e3ecafbb3"
             },
             "require": {
                 "ext-gd": "*",
@@ -3767,6 +3767,7 @@
                 "phpstan/phpstan": "^2.2",
                 "phpstan/phpstan-phpunit": "^2.0",
                 "phpunit/phpunit": "^11.5|^12.5|^13.3",
+                "playwright-php/playwright": "^1.5",
                 "symfony/asset-mapper": "^6.4|^7.4|^8.1",
                 "symfony/browser-kit": "^6.4|^7.4|^8.1",
                 "symfony/css-selector": "^6.4|^7.4|^8.1",
@@ -3776,6 +3777,7 @@
                 "symfony/webpack-encore-bundle": "^2.4"
             },
             "suggest": {
+                "playwright-php/playwright": "Needed by the PlaywrightJourneyScreenshots capture trait, version 1.4 or later, with Node.js 20 or later; the review page does not use it.",
                 "symfony/asset-mapper": "To serve the bundle's Stimulus controllers without a JavaScript build step. A Webpack Encore or Symfony Reprise host takes them from node_modules instead.",
                 "symfony/panther": "Needed by the JourneyScreenshots capture trait; the review page does not use it."
             },
@@ -3792,12 +3794,15 @@
             },
             "archive": {
                 "exclude": [
-                    ".github",
+                    "/.claude",
                     "/.dockerignore",
+                    "/.github",
+                    "/.idea",
                     "/demo",
                     "/docker",
-                    "/docs",
+                    "/docs/assets",
                     "/js",
+                    "/recipe",
                     "/tests"
                 ]
             },
@@ -3822,10 +3827,11 @@
             "license": [
                 "MIT"
             ],
-            "description": "Full-page screenshot capture for Panther journeys, plus a dev review page that turns visual feedback into a brief for a coding agent.",
+            "description": "Full-page screenshot capture for Panther and Playwright journeys, plus a dev review page that turns visual feedback into a brief for a coding agent.",
             "keywords": [
                 "e2e",
                 "panther",
+                "playwright",
                 "qa",
                 "screenshots",
                 "symfony",

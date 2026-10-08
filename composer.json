@@ -1,11 +1,12 @@
 {
     "name": "tacticmedia/qa-bundle",
-    "description": "Full-page screenshot capture for Panther journeys, plus a dev review page that turns visual feedback into a brief for a coding agent.",
+    "description": "Full-page screenshot capture for Panther and Playwright journeys, plus a dev review page that turns visual feedback into a brief for a coding agent.",
     "license": "MIT",
     "type": "symfony-bundle",
     "keywords": [
         "e2e",
         "panther",
+        "playwright",
         "qa",
         "screenshots",
         "symfony",
@@ -35,6 +36,7 @@
         "phpstan/phpstan": "^2.2",
         "phpstan/phpstan-phpunit": "^2.0",
         "phpunit/phpunit": "^11.5|^12.5|^13.3",
+        "playwright-php/playwright": "^1.5",
         "symfony/asset-mapper": "^6.4|^7.4|^8.1",
         "symfony/browser-kit": "^6.4|^7.4|^8.1",
         "symfony/css-selector": "^6.4|^7.4|^8.1",
@@ -47,6 +49,7 @@
         "symfony/asset-mapper": "<6.4"
     },
     "suggest": {
+        "playwright-php/playwright": "Needed by the PlaywrightJourneyScreenshots capture trait, version 1.4 or later, with Node.js 20 or later; the review page does not use it.",
         "symfony/asset-mapper": "To serve the bundle's Stimulus controllers without a JavaScript build step. A Webpack Encore or Symfony Reprise host takes them from node_modules instead.",
         "symfony/panther": "Needed by the JourneyScreenshots capture trait; the review page does not use it."
     },

@@ -109,13 +109,76 @@ jobs:
 
       - run: vendor/bin/bdi detect drivers
 
-      - run: vendor/bin/phpunit --group e2e
+      - run: vendor/bin/phpunit --group e2e --exclude-group playwright
+        env:
+          QA_SCREENSHOTS_DIR: ${{ runner.temp }}/shots
+
+      # The PHP reader over the tree that the Panther capture trait wrote.
+      - name: The PHP reader parses the produced tree
+        run: vendor/bin/phpunit --group contract --fail-on-skipped
+        env:
+          QA_SCREENSHOTS_DIR: ${{ runner.temp }}/shots
 
       - if: failure()
         uses: actions/upload-artifact@v4
         with:
           name: panther-failures-php${{ matrix.php }}
-          path: tests/Fixtures/app/var/error-screenshots
+          path: |
+            tests/Fixtures/app/var/error-screenshots
+            ${{ runner.temp }}/shots
+          if-no-files-found: ignore
+
+  playwright:
+    name: Playwright PHP (PHP ${{ matrix.php }}, Symfony ${{ matrix.symfony }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - php: '8.2'
+            symfony: '6.4.*'
+          - php: '8.5'
+            symfony: '8.1.*'
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: gd, intl
+          coverage: none
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Pin the Symfony branch
+        run: |
+          composer global config --no-plugins allow-plugins.symfony/flex true
+          composer global require --no-progress --no-scripts --no-plugins symfony/flex
+          composer config extra.symfony.require "${{ matrix.symfony }}"
+
+      - run: composer update --no-progress
+
+      # The bridge installs its npm packages into vendor/, so this runs after each
+      # composer update.
+      - run: vendor/bin/playwright-install --with-deps --package-manager-bin=npm chromium
+
+      - run: vendor/bin/phpunit --group playwright
+        env:
+          QA_SCREENSHOTS_DIR: ${{ runner.temp }}/shots
+
+      # The PHP reader over the tree that the playwright-php capture trait wrote.
+      - name: The PHP reader parses the produced tree
+        run: vendor/bin/phpunit --group contract --fail-on-skipped
+        env:
+          QA_SCREENSHOTS_DIR: ${{ runner.temp }}/shots
+
+      - if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-php-tree-php${{ matrix.php }}
+          path: ${{ runner.temp }}/shots
           if-no-files-found: ignore
 
   node:
@@ -167,7 +230,7 @@ jobs:
       # layout is a contract and not the behaviour of one implementation.
       - name: The PHP reader parses the produced tree
         working-directory: .
-        run: vendor/bin/phpunit --group contract
+        run: vendor/bin/phpunit --group contract --fail-on-skipped
         env:
           QA_SCREENSHOTS_DIR: ${{ runner.temp }}/shots
 
