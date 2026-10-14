@@ -1,4 +1,4 @@
-import { Controller } from '@hotwired/stimulus';
+import { Controller } from './stimulus.js';
 
 /*
  * Copies the text of another element to the clipboard and shows a confirmation
@@ -6,11 +6,7 @@ import { Controller } from '@hotwired/stimulus';
  * insecure origin, it hides the button and leaves the text on the page for manual
  * selection.
  *
- * Usage (always via the Twig helpers, never hand-written data-* attributes):
- *   <div {{ stimulus_controller('qa-clipboard') }}>
- *       <button {{ stimulus_target('qa-clipboard', 'button')|stimulus_action('qa-clipboard', 'copy') }}>Copy</button>
- *       <pre {{ stimulus_target('qa-clipboard', 'source') }}>...</pre>
- *   </div>
+ * Markup: templates/prompt.html.twig.
  */
 export default class extends Controller {
     static targets = ['source', 'button'];

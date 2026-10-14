@@ -70,6 +70,11 @@ The bundle requires `symfony/security-csrf`. On a host that has no other depende
 package, a `--dev` install makes it dev-only, FrameworkBundle then leaves CSRF protection off, and
 the review page does not render. [docs/csrf.md](docs/csrf.md) gives the setting.
 
+The bundle also requires `symfony/twig-bundle`. On a host that has no other dependency on that
+package, a `--dev` install makes it dev-only, but its Flex recipe registers TwigBundle for every
+environment, so the production kernel fails with `Class "Symfony\Bundle\TwigBundle\TwigBundle" not
+found`. Such a host requires `symfony/twig-bundle` itself.
+
 The Flex recipe writes the next two files. If the host does not install the recipe, write them
 yourself.
 
@@ -88,12 +93,9 @@ when@dev:
         type: php
 ```
 
-The bundle must be registered in every environment whose container is built while
-`assets/controllers.json` names it, and Composer writes that file for every environment. A host
-without the line fails with `Could not find an asset mapper path that points to the "annotate"
-controller`. [docs/host-setup.md](docs/host-setup.md#the-bundle-and-controllersjson-must-agree)
-describes the two host states that satisfy this, and the `--no-scripts` sequence for a host that
-has no recipe.
+The page loads its own JavaScript, so the asset build of the host needs no change, and a production
+build without the development dependencies does not refer to the bundle.
+[docs/frontend.md](docs/frontend.md) gives the details.
 
 Use the trait once, on your journey base class:
 
@@ -125,17 +127,13 @@ Call `captureFullPageScreenshot($this->page, 'Cart with two items')`. playwright
 the application, so serve it before the journeys run.
 [docs/host-setup.md](docs/host-setup.md#the-capture-traits) gives the details.
 
-Flex writes the Stimulus controllers into `assets/controllers.json` during installation, but only
-where that file exists. Without the block the page renders and does not respond to a selection or
-to a key. [docs/host-setup.md](docs/host-setup.md) gives the block and the rest of the host setup.
-
 ## Documentation
 
 | Document | Contents |
 | --- | --- |
-| [docs/host-setup.md](docs/host-setup.md) | `controllers.json`, the trait, configuration, firewall, prompt wording. |
+| [docs/host-setup.md](docs/host-setup.md) | The capture traits, configuration, firewall, prompt wording. |
 | [docs/csrf.md](docs/csrf.md) | CSRF on each Symfony branch: the stateless token id and the `csrf-protection` controller. |
-| [docs/frontend.md](docs/frontend.md) | The page's JavaScript on AssetMapper, Encore and Reprise, styling, content security policy. |
+| [docs/frontend.md](docs/frontend.md) | The page's JavaScript, styling, content security policy. |
 | [docs/review.md](docs/review.md) | The review page: directories, keyboard, coordinates. |
 | [docs/how-it-works.md](docs/how-it-works.md) | The design: measurement, the sidecar, the basename, selection resolution, crops, notes. |
 | [docs/without-php.md](docs/without-php.md) | Capture from Playwright and review in a container. |
@@ -144,6 +142,8 @@ to a key. [docs/host-setup.md](docs/host-setup.md) gives the block and the rest 
 | [js/README.md](js/README.md) | `@tacticmedia/qa-capture`, the Playwright producer. |
 | [docker/review/README.md](docker/review/README.md) | `ghcr.io/tacticmedia/qa-review`, the review image. |
 | [demo/README.md](demo/README.md) | A Symfony 8.1 host that runs each producer and the container. |
+| [CHANGELOG.md](CHANGELOG.md) | The changes in each release. |
+| [UPGRADE.md](UPGRADE.md) | The steps for a host on an earlier release. |
 
 ## Contributions
 

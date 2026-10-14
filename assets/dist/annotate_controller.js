@@ -1,5 +1,5 @@
-import { Controller } from '@hotwired/stimulus';
-import { visit } from '@hotwired/turbo';
+import { Controller } from './stimulus.js';
+import { visit } from './turbo.js';
 
 /*
  * Screenshot review: drag a rectangle over the screenshot to bind a note to one
@@ -15,25 +15,7 @@ import { visit } from '@hotwired/turbo';
  * Geometry is assigned through the CSSOM: style-src controls a style attribute
  * parsed from markup, not a property write.
  *
- * Usage (always via the Twig helpers, never hand-written data-* attributes):
- *   <div {{ stimulus_controller('qa-annotate', {previousUrl: ..., nextUrl: ..., aboveUrl: ..., belowUrl: ..., backUrl: ...})
- *            |stimulus_action('qa-annotate', 'previous', 'keydown.left@window')
- *            |stimulus_action('qa-annotate', 'next', 'keydown.right@window')
- *            |stimulus_action('qa-annotate', 'above', 'keydown.up@window')
- *            |stimulus_action('qa-annotate', 'below', 'keydown.down@window')
- *            |stimulus_action('qa-annotate', 'cancel', 'keydown.esc@window')
- *            |stimulus_action('qa-annotate', 'submit', 'keydown.meta+enter')
- *            |stimulus_action('qa-annotate', 'submit', 'keydown.ctrl+enter') }}>
- *       <div {{ stimulus_target('qa-annotate', 'stage')
- *                |stimulus_action('qa-annotate', 'start', 'pointerdown')
- *                |stimulus_action('qa-annotate', 'move', 'pointermove')
- *                |stimulus_action('qa-annotate', 'end', 'pointerup') }}>
- *           <img {{ stimulus_target('qa-annotate', 'image') }} src="..." />
- *           <div hidden {{ stimulus_target('qa-annotate', 'selection') }}></div>
- *           <div hidden data-rect-x="10" ... {{ stimulus_target('qa-annotate', 'marker') }}></div>
- *       </div>
- *       <input type="hidden" {{ stimulus_target('qa-annotate', 'x') }} />
- *   </div>
+ * Markup: templates/annotate.html.twig.
  */
 export default class extends Controller {
     static targets = [

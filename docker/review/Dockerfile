@@ -35,8 +35,6 @@ ENV APP_ENV=prod \
     QA_REVIEW_DIR=/data/var/review
 
 RUN composer install --no-dev --no-interaction --no-progress --optimize-autoloader \
-    && php bin/console importmap:install \
-    && php bin/console asset-map:compile \
     && php bin/console cache:warmup \
     && chown -R app:app /app
 

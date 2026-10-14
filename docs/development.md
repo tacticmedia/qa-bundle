@@ -36,10 +36,20 @@ QA_SCREENSHOTS_DIR=/tmp/php-shots vendor/bin/phpunit --group playwright
 QA_SCREENSHOTS_DIR=/tmp/php-shots vendor/bin/phpunit --group contract
 ```
 
-`tests/Functional/StimulusControllersMapTest.php` runs StimulusBundle's own resolver over the
-fixture host, so on a broken host it fails with the StimulusBundle message and not with a page that
-does not respond. To reproduce that, remove the `asset_mapper` prepend from
-`TacticMediaQaBundle::prependExtension()` and run it.
+`tests/Host/production-build.sh` creates a `symfony/skeleton` host on AssetMapper, installs this
+checkout with `composer require --dev`, and then runs `composer install --no-dev` and
+`asset-map:compile` in `prod`. The `production-build` CI job runs it for a host with
+`symfony/stimulus-bundle` and for a host without it. It needs network access and an empty target
+directory:
+
+```
+tests/Host/production-build.sh /tmp/qa-host symfony/stimulus-bundle
+```
+
+`assets/dist/stimulus.js` and `assets/dist/turbo.js` are unchanged copies of `dist/stimulus.js`
+from `@hotwired/stimulus` 3.2.2 and `dist/turbo.es2017-esm.js` from `@hotwired/turbo` 8.0.23, with
+their licenses beside them. The header of the Stimulus 3.2.2 file reads 3.2.1. To upgrade, replace
+both files from the npm tarballs and run the E2E group.
 
 The capture package and the review image have separate test commands:
 

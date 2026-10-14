@@ -14,6 +14,7 @@
         "symfony/flex": "^2",
         "symfony/framework-bundle": "8.1.*",
         "symfony/runtime": "8.1.*",
+        "symfony/stimulus-bundle": "^3.6",
         "symfony/yaml": "8.1.*",
         "symfonycasts/tailwind-bundle": "^1.0",
         "tacticmedia/qa-bundle": "dev-main"

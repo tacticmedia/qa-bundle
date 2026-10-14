@@ -4,9 +4,7 @@ A Symfony application that serves `/_dev/screenshots` from two mounted directori
 else. `/` redirects to that page. The application lets a project with no PHP tools review its
 screenshot sets.
 
-This application is not the demo: it has no Tailwind build and no journey. It is also not the test
-fixture. That host registers the importmap Twig services manually, because `symfony/asset-mapper` is
-a dev dependency there. Here it is a normal dependency, so TwigBundle registers `importmap()`.
+This application is not the demo: it has no Tailwind build and no journey.
 
 ## The mount contract
 
@@ -58,17 +56,8 @@ package.
 
 ```
 composer install
-php bin/console importmap:install
 QA_SCREENSHOTS_DIR=/absolute/path/to/screenshots \
 QA_REVIEW_DIR=/absolute/path/to/review \
 QA_PROJECT_ROOT=/absolute/path/to/project \
     php -S 127.0.0.1:8000 -t public public/index.php
 ```
-
-Do not run `asset-map:compile` before this command, and remove `public/assets` if it exists. The
-built-in server passes an existing file under `public/` to the router script as `SCRIPT_FILENAME`,
-and the Symfony runtime then requires the compiled asset as PHP instead of serving it. Leave
-`APP_ENV` unset: in `prod` no dev server serves uncompiled assets, and the built-in server passes an
-exported `APP_ENV` to PHP only where `variables_order` in php.ini contains `E`. The image runs
-`prod` behind Caddy, where `php_server` serves an existing file directly and sends other requests
-to PHP.

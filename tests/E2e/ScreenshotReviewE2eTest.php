@@ -13,8 +13,10 @@ use Facebook\WebDriver\WebDriverBy;
 use Facebook\WebDriver\WebDriverHasInputDevices;
 use Facebook\WebDriver\WebDriverKeys;
 use PHPUnit\Framework\Attributes\Group;
+use PHPUnit\Framework\Attributes\TestDox;
 use Symfony\Component\Panther\Client;
 use Symfony\Component\Panther\PantherTestCase;
+use Symfony\Component\Security\Csrf\SameOriginCsrfTokenManager;
 use TacticMedia\QaBundle\Tests\ScreenshotFixtures;
 
 /**
@@ -98,6 +100,52 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
         $this->theNoteBoxKeepsTheNavigationKeysToItself($client);
         $this->commandEnterSavesTheNote($client);
         $this->escapeReturnsToTheCardOnTheGrid($client);
+    }
+
+    #[TestDox('A submit double-submits the token as a cookie, and the server accepts it')]
+    public function testANoteFormDoubleSubmitsItsToken(): void
+    {
+        if (!class_exists(SameOriginCsrfTokenManager::class)) {
+            self::markTestSkipped('Below Symfony 7.2 the token is session-backed, and nothing is double-submitted.');
+        }
+
+        $client = self::createPantherClient();
+        $client->request('GET', $this->annotatePath(self::VIEWPORT, self::SCREEN));
+
+        $this->waitOrFail(
+            $client,
+            fn (): bool => (bool) $this->quietly(fn (): mixed => $client->executeScript('return !!window.Turbo')),
+            'The module of the bundle is loaded.',
+        );
+
+        $this->fillNote($client, 'Saved with a double-submitted token.');
+
+        // The held submit shows what the listener wrote before the request leaves.
+        $held = $client->executeScript(<<<'HOLD'
+            const form = document.querySelector('form[action$="/feedback"]');
+            const field = form.querySelector('input[name="_token"]');
+            const rendered = field.value;
+            const hold = event => event.preventDefault();
+            form.addEventListener('submit', hold);
+            form.requestSubmit();
+            form.removeEventListener('submit', hold);
+
+            return [rendered, field.value, document.cookie];
+            HOLD);
+
+        self::assertIsArray($held);
+        [$rendered, $token, $cookies] = array_map(strval(...), $held);
+
+        self::assertNotSame($rendered, $token, 'The submit replaces the rendered token.');
+        self::assertStringContainsString($rendered.'_'.$token.'='.$rendered, $cookies, 'The same token is set as a cookie.');
+
+        $this->clickBySelector($client, 'form[action$="/feedback"] button[type="submit"]');
+
+        $this->waitOrFail(
+            $client,
+            fn (): bool => 1 === $this->noteCount($client),
+            'The server accepts the double-submitted token.',
+        );
     }
 
     /**
@@ -479,9 +527,9 @@ final class ScreenshotReviewE2eTest extends PantherTestCase
 
     /**
      * A save from the keyboard uses requestSubmit(), which fires the submit event
-     * that the double-submit listener of a host needs. A bypass would cause the
-     * host to reject the POST with no message, which appears here as a note that
-     * is not saved.
+     * that the double-submit listener in assets/dist/csrf_protection.js needs. A
+     * bypass would cause the host to reject the POST with no message, which appears
+     * here as a note that is not saved.
      */
     private function commandEnterSavesTheNote(Client $client): void
     {

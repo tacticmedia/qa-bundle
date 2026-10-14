@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace TacticMedia\QaBundle\Controller;
 
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\Clock\ClockInterface;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\RedirectResponse;
 use Symfony\Component\HttpFoundation\Request;
@@ -20,6 +19,8 @@ use TacticMedia\QaBundle\Review\ScreenshotCatalog;
 use TacticMedia\QaBundle\Review\SelectionContext;
 use TacticMedia\QaBundle\Review\SelectionCropper;
 use TacticMedia\QaBundle\Review\SelectionResolver;
+
+use function Symfony\Component\Clock\now;
 
 /**
  * Shows the screenshots that the journeys wrote and collects visual feedback on
@@ -37,6 +38,7 @@ final class ScreenshotReviewController extends AbstractController
     public const ROUTE_GROUP = 'qa_screenshots_group';
     public const ROUTE_ANNOTATE = 'qa_screenshots_annotate';
     public const ROUTE_RAW = 'qa_screenshots_raw';
+    public const ROUTE_ASSET = 'qa_screenshots_asset';
     public const ROUTE_PROMPT = 'qa_screenshots_prompt';
     public const ROUTE_PROMPT_RAW = 'qa_screenshots_prompt_raw';
     public const ROUTE_FEEDBACK_CREATE = 'qa_screenshots_feedback_create';
@@ -48,12 +50,13 @@ final class ScreenshotReviewController extends AbstractController
     /**
      * {name} accepts the same character set that ScreenshotTree::fileSafe()
      * produces. That set excludes "." and "/", so path traversal is not possible.
-     * {mode} and {viewport} use the same method.
+     * {mode}, {viewport} and {file} use the same method.
      */
     private const REQUIREMENTS = [
         'mode' => '[a-z][a-z0-9-]*',
         'viewport' => '\d+x\d+',
         'name' => '[A-Za-z0-9 _-]+',
+        'file' => '[a-z_]+\.js',
     ];
 
     public function __construct(
@@ -61,7 +64,6 @@ final class ScreenshotReviewController extends AbstractController
         private readonly FeedbackStore $feedback,
         private readonly SelectionResolver $resolver,
         private readonly SelectionCropper $cropper,
-        private readonly ClockInterface $clock,
     ) {
     }
 
@@ -132,7 +134,8 @@ final class ScreenshotReviewController extends AbstractController
             $rectangle,
             $imageSize,
             $note,
-            $this->clock->now(),
+            // A host that has symfony/clock as a dev-only package has no `clock` service to inject.
+            now(),
         ));
 
         return $this->redirectToRoute(self::ROUTE_ANNOTATE, [
@@ -199,6 +202,24 @@ final class ScreenshotReviewController extends AbstractController
 
         $response = new BinaryFileResponse($path, Response::HTTP_OK, ['Content-Type' => 'image/png'], autoEtag: true);
         $response->setPrivate();
+        $response->isNotModified($request);
+
+        return $response;
+    }
+
+    #[Route('/assets/{file}', name: self::ROUTE_ASSET, methods: [Request::METHOD_GET])]
+    public function asset(Request $request, string $file): BinaryFileResponse
+    {
+        $path = \dirname(__DIR__, 2).'/assets/dist/'.$file;
+
+        if (!is_file($path)) {
+            throw $this->createNotFoundException();
+        }
+
+        $response = new BinaryFileResponse($path, Response::HTTP_OK, ['Content-Type' => 'text/javascript'], autoEtag: true);
+        $response->setPrivate();
+        // The URLs carry no version, so the browser revalidates and an upgrade of the bundle applies.
+        $response->headers->addCacheControlDirective('no-cache');
         $response->isNotModified($request);
 
         return $response;

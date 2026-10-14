@@ -151,5 +151,3 @@ php bin/console tailwind:build --watch
 - The review routes come from the `routing.controllers` loader (symfony/routing 7.4 and later),
   which reads them from the controller service. The `config/routes/qa.yaml` import that the README
   of the bundle documents is the method for hosts on Symfony 6.4; this application does not use it.
-- `assets/app.js` does not import `styles/app.css`. Twig links the stylesheet instead, so it
-  reaches the page once and not a second time through `importmap('app')`.

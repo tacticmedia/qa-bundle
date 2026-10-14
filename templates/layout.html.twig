@@ -14,8 +14,9 @@
     content security policy blocks. Such a host overrides the template and links
     its own compiled stylesheet.
 
-    The default `scripts` block is for an AssetMapper host. A Webpack Encore or
-    Symfony Reprise host overrides it with its own entry tag function.
+    The default `scripts` block loads assets/dist/review.js, which loads all
+    JavaScript of the page and uses no file of the host build. An override of that
+    block must keep its tag.
 #}
 {% import '@TacticMediaQa/_ui.html.twig' as ui %}
 
@@ -29,7 +30,7 @@
         <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
     {% endblock %}
     {% block scripts %}
-        {{ include('@TacticMediaQa/_importmap.html.twig') }}
+        <script type="module" src="{{ path('qa_screenshots_asset', {file: 'review.js'}) }}"></script>
     {% endblock %}
 </head>
 <body class="h-full bg-white text-gray-900 dark:bg-black dark:text-slate-300">

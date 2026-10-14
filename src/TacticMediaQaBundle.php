@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace TacticMedia\QaBundle;
 
-use Symfony\Component\AssetMapper\AssetMapperInterface;
 use Symfony\Component\Config\Definition\Configurator\DefinitionConfigurator;
 use Symfony\Component\Config\Definition\Exception\InvalidConfigurationException;
 use Symfony\Component\DependencyInjection\ContainerBuilder;
@@ -20,8 +19,6 @@ use TacticMedia\QaBundle\Controller\ScreenshotReviewController;
  *
  * The host selects the environment: enable the bundle for `dev` and `test` in
  * config/bundles.php, and import config/routes.php under `when@dev`.
- * docs/host-setup.md, "The bundle and controllers.json must agree", gives the
- * reason `test` is required.
  */
 final class TacticMediaQaBundle extends AbstractBundle
 {
@@ -40,16 +37,6 @@ final class TacticMediaQaBundle extends AbstractBundle
             $container->prependExtensionConfig('framework', [
                 'csrf_protection' => [
                     'stateless_token_ids' => [ScreenshotReviewController::CSRF_TOKEN],
-                ],
-            ]);
-        }
-
-        if ($this->isAssetMapperAvailable($container)) {
-            $container->prependExtensionConfig('framework', [
-                'asset_mapper' => [
-                    'paths' => [
-                        __DIR__.'/../assets/dist' => '@tacticmedia/qa-bundle',
-                    ],
                 ],
             ]);
         }
@@ -82,18 +69,5 @@ final class TacticMediaQaBundle extends AbstractBundle
         if (str_starts_with($review, $screenshots)) {
             throw new InvalidConfigurationException(\sprintf('qa.review_dir ("%s") is inside qa.screenshots_dir ("%s"), which every journey run empties.', $reviewDir, $screenshotsDir));
         }
-    }
-
-    private function isAssetMapperAvailable(ContainerBuilder $container): bool
-    {
-        if (!interface_exists(AssetMapperInterface::class)) {
-            return false;
-        }
-
-        $bundles = $container->getParameter('kernel.bundles_metadata');
-
-        return \is_array($bundles)
-            && \is_array($bundles['FrameworkBundle'] ?? null)
-            && is_file($bundles['FrameworkBundle']['path'].'/Resources/config/asset_mapper.php');
     }
 }

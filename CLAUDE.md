@@ -18,7 +18,8 @@ do not use the container. `js/` is the Playwright producer of the same tree, and
 
 **Review** - `src/Controller/ScreenshotReviewController.php` and `src/Review/*`, the page at
 `/_dev/screenshots`. It uses the container and only reads the tree. `templates/prompt.txt.twig`
-contains the wording of the brief.
+contains the wording of the brief. `assets/dist/` contains all JavaScript of the page, which the
+controller serves; `review.js` is the entry.
 
 ## Conventions to keep
 
@@ -38,10 +39,8 @@ contains the wording of the brief.
   over a tree that a producer wrote, and it skips itself when `QA_SCREENSHOTS_DIR` is not set. If it
   only skips, the contract is not tested, so CI runs it with `--fail-on-skipped` over the tree of
   each producer.
-- **There are two npm packages, with two different functions.** `assets/package.json` is
-  `@tacticmedia/qa-bundle`, the Stimulus controllers that the review page loads. `js/package.json`
-  is `@tacticmedia/qa-capture`, the Playwright producer. Do not use either name for the other
-  package.
+- **`js/package.json` is the only npm package**, `@tacticmedia/qa-capture`, the Playwright
+  producer. The review page has no npm package.
 - **The five default viewports are one list in two places.** A layout defect usually occurs at one
   width, so the reviewer needs each breakpoint. `ScreenshotTree::screenshotViewports()` and
   `DEFAULT_VIEWPORTS` in `js/src/capture/types.ts` contain the same values in the same order, and
@@ -54,6 +53,15 @@ contains the wording of the brief.
   appear as an empty page with no explanation.
 - **The prompt is producer-neutral.** It contains no producer name and no framework name. The labels
   are journey and scenario. A host that needs different wording overrides `prompt.txt.twig`.
+- **The review page loads no file of the host build, and Composer writes nothing into host assets.**
+  Do not add an `assets/package.json`, the `symfony-ux` keyword, or a `require` on a package whose
+  Flex recipe changes host assets, such as `symfony/stimulus-bundle`. A host installs the bundle with
+  `--dev`, so `composer install --no-dev` removes what such an entry refers to, and the production
+  asset build fails. `tests/Host/production-build.sh` shows it.
+- **Do not autowire a service that FrameworkBundle registers only for a non-dev package.** A `--dev`
+  install makes each dependency of the bundle dev-only, and `ContainerBuilder::willBeAvailable()`
+  then reports it as unavailable. For that reason the controller calls
+  `Symfony\Component\Clock\now()` and does not inject `ClockInterface`.
 - **`symfony/panther` and `playwright-php/playwright` are suggestions and dev dependencies. Do not
   put them in `require`.** Only the capture traits use them. A requirement adds php-webdriver and
   `ext-zip`, or `symfony/process` and a Node bridge, to the container image that serves the review
@@ -87,38 +95,13 @@ contains the wording of the brief.
   absolute path is the fallback, not the default.
 - **PHP supplies data; templates supply text.** The wording of the prompt is in `prompt.txt.twig`,
   so a host can replace it with its own conventions through a standard bundle template override.
-- **Stimulus identifiers use the `qa-` prefix.** They are set in `assets/package.json` under
-  `symfony.controllers[*].name`, which replaces the name that the loader derives from the package
-  name. Without them, each target attribute reads
-  `data-tacticmedia--qa-bundle--annotate-target`. A change to a name breaks the templates and the
+- **Stimulus identifiers use the `qa-` prefix.** `assets/dist/review.js` registers them, and the
+  templates write the `data-*` attributes literally. A change to a name breaks the templates and the
   E2E selectors together.
-- **Keep the `symfony-ux` keyword in composer.json.** Flex's `PackageJsonSynchronizer` selects
-  packages by it; without it the next `composer update`, `require` or `remove` removes the block
-  from the host, and the page stops responding. `docs/host-setup.md`, "Stimulus controllers", gives
-  what Flex writes and when.
-- **`assets/dist` reaches AssetMapper only from `prependExtension()`.** Nothing else registers the
-  path: `StimulusExtension::prepend()` registers only stimulus-bundle's own directory, and there is
-  no cache warmer. Composer writes the `controllers.json` block for every environment, so the recipe
-  registers `dev` and `test`, and `tests/Functional/StimulusControllersMapTest.php` fails if the
-  registration or a controller name moves. `docs/host-setup.md`, "The bundle and controllers.json
-  must agree", gives the error and the host states.
-- **`peerDependencies` in `assets/package.json` is what Flex copies into a bundler host's
-  `devDependencies`.** Without them `@hotwired/turbo` does not resolve on a Webpack Encore or
-  Reprise host and the annotate controller does not load; an AssetMapper host takes
-  `symfony.importmap` instead. `docs/frontend.md` gives the host side.
-- **The `importmap()` call is in `_importmap.html.twig`. Do not put it inline in the layout.**
-  `{% extends %}` compiles the complete parent template, so an inline call is a parse error on a host
-  that has no AssetMapper, even when that host overrides `{% block scripts %}`. `include()` resolves
-  at render time, which is the condition that makes the documented override work. `EncoreHostTest`
-  and `RepriseHostTest` fail if the call is moved back.
-- **`symfony/asset-mapper` is a dev dependency.** In `require` it would install and enable
-  AssetMapper in each host, including hosts that build with Encore or Reprise. As a dev dependency,
-  `ContainerBuilder::willBeAvailable()` reports it as unavailable here, so TwigBundle does not
-  register `importmap()`. For that reason `tests/Fixtures/app/TestKernel.php` declares
-  `twig.extension.importmap` itself, to act as the AssetMapper host.
-- **`csrf-protection` is a host contract that depends on the name.** The forms refer to the recipe
-  controller by that name, and the bundle does not supply it; if the host renames it, each write has
-  no effect. `docs/csrf.md` gives which recipe ships it and where it is effective.
+- **`assets/dist/stimulus.js`, `turbo.js` and `csrf_protection.js` are unchanged upstream copies.**
+  `docs/development.md` gives the source of each. `csrf_protection.js` selects the token input by
+  `data-controller="csrf-protection"`, so each form keeps that attribute; `docs/csrf.md` gives the
+  reason.
 - **The minimum versions are PHP 8.2 and Symfony 6.4.** Do not use property hooks, asymmetric
   visibility, typed class constants or `new X()->y()`. `array_all`, `array_any`, `array_find` and
   `array_find_key` come from `symfony/polyfill-php84`. No other function from 8.3 or 8.4 is
@@ -139,14 +122,9 @@ a temporary directory; the configuration of the bundle, through a real `Containe
 kernel; and the page, through `WebTestCase` against `tests/Fixtures/app`. The page tests use the
 real CSRF path, so each write sends the token that the page rendered and a same-origin header.
 
-There are three fixture hosts, one for each method a host can use to build its JavaScript.
-`tests/Fixtures/app` uses AssetMapper and runs the complete suite. `tests/Fixtures/encore` and
-`tests/Fixtures/reprise` each run `BundlerHostTestCase`, and they test one condition: that the
-layout override in `docs/frontend.md` renders the page on a host that has no `importmap()`. The
-`templates/bundles/TacticMediaQaBundle/layout.html.twig` file in the Encore fixture is identical to
-the `docs/frontend.md` snippet apart from its leading comment. The file in the Reprise fixture
-replaces only the entry-tag function that `docs/frontend.md` names for that host. Keep both files
-in that state, or the documented override is untested.
+There are three fixture hosts. `tests/Fixtures/app` has no JavaScript build and runs the complete
+suite. `tests/Fixtures/encore` and `tests/Fixtures/reprise` each run `BundlerHostTestCase`, which
+shows that the default layout works on those hosts with no override.
 `RepriseHostTest` skips itself where the package is not installed. In CI that is each matrix job
 below PHP 8.4. Locally it skips unless `symfony/reprise` is required.
 
@@ -155,7 +133,9 @@ and then runs `--group contract` over that tree. The `panther` and `playwright` 
 with `PantherCaptureE2eTest` and `PlaywrightCaptureE2eTest`, which capture the fixture host with
 each PHP trait. The `playwright` job runs `vendor/bin/playwright-install` after `composer update`,
 because the library keeps its npm packages in `vendor/`. The `docker` job builds the review image
-and tests the empty state on each push and pull request, and publishes to ghcr.io on push.
+and tests the empty state on each push and pull request, and publishes to ghcr.io on push. The
+`production-build` job runs `tests/Host/production-build.sh` for a host with
+`symfony/stimulus-bundle` and for a host without it.
 
 CI runs PHPStan and the non-e2e group on PHP 8.2/Symfony 6.4, 8.3/7.4, 8.4/8.1 and 8.5/8.1. It runs
 the e2e group on 8.2/6.4 and 8.5/8.1 only, split between the `panther` job and the `playwright`
@@ -170,7 +150,7 @@ a run does not test the intended versions.
 `vendor/bin/phpunit --group e2e` drives Chrome against the same fixture application through the PHP
 built-in web server. It tests the behaviour that needs a browser: the selection that records natural
 image pixels, the saved marker that returns to the pixels it records when the image is centred or
-scaled, and the keyboard navigation.
+scaled, the keyboard navigation, and the double-submit of the CSRF token.
 
 Two rules for driving the browser, both used in `tests/E2e/ScreenshotReviewE2eTest.php`:
 
@@ -193,12 +173,10 @@ because each journey empties the tree; `--testsuite playwright` selects the othe
 `demo/` is a Symfony 8.1 application on AssetMapper and PHP 8.4 that requires the bundle through a
 path repository. Its `vendor/` and `var/` directories are git-ignored, so run `composer install`
 there in a new checkout before `demo/bin/console`. The demo shows the result of a Flex install:
-`assets/controllers.json` contains the four controllers and `importmap.php` contains the two
-Hotwired packages. The demo enables the bundle in each environment, and it takes the review routes
-from the `routing.controllers` loader (symfony/routing 7.4 and later), which imports them from the
-controller service. It therefore does not import `config/routes.php`, which is the method the README
-gives to a host. No CI
-job runs the demo, PHPStan does not analyse it, and `composer.json` excludes it from the distributed
-archive.
+`assets/controllers.json` names no controller of the bundle. The demo enables the bundle in each
+environment, and it takes the review routes from the `routing.controllers` loader (symfony/routing
+7.4 and later), which imports them from the controller service. It therefore does not import
+`config/routes.php`, which is the method the README gives to a host. No CI job runs the demo,
+PHPStan does not analyse it, and `composer.json` excludes it from the distributed archive.
 
 PHPStan runs at level 8 over `src` and `tests`.

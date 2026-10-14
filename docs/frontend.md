@@ -1,64 +1,22 @@
 # JavaScript and styling
 
-How the page's JavaScript reaches the browser in each build tool, how to replace the default
-styling, and what a strict content security policy permits.
+How the page loads its JavaScript, how to replace the default styling, and what a strict content
+security policy permits.
 
-## A running Stimulus application
+## The page's JavaScript
 
-The page needs the Stimulus application of the host to be started, with the four `qa-*` controllers
-registered in it. This applies to each build tool. The Twig helpers in StimulusBundle do not depend
-on the build tool, so the markup is the same in each host and only the delivery of the JavaScript
-changes.
+The default `scripts` block of the layout loads one module, `/_dev/screenshots/assets/review.js`.
+It starts a Stimulus application with the four `qa-*` controllers, and it loads Turbo and the
+listener that double-submits the CSRF token ([csrf.md](csrf.md)). A route of the bundle serves these
+files from `assets/dist/`, so the page uses no file of the host build. That is the same on
+AssetMapper, Webpack Encore, Symfony Reprise and a host with no JavaScript build.
 
-On **AssetMapper** no build step is necessary, if your Stimulus entrypoint is named `app`. The
-default `scripts` block calls `importmap('app')`, which throws an exception where the host has no
-such entrypoint. If your entrypoint has a different name, override the block in the same way as the
-bundler hosts below. Flex writes the `controllers.json` block and adds `@hotwired/stimulus` and
-`@hotwired/turbo` to `importmap.php`.
+Composer writes nothing for this bundle into `assets/controllers.json`, `importmap.php` or
+`package.json`. A production build without the development dependencies therefore does not refer
+to the bundle.
 
-The bundle registers `assets/dist` as an AssetMapper path from `prependExtension()`, so it does that
-only in an environment where `config/bundles.php` enables the bundle. `controllers.json` names the
-package in every environment, and StimulusBundle stops the container build where the two disagree.
-[host-setup.md](host-setup.md#the-bundle-and-controllersjson-must-agree) gives the message and the
-two host states that satisfy it.
-
-On **Webpack Encore** and **Symfony Reprise** the controllers resolve from `node_modules`. Flex
-writes the same `controllers.json` block, and adds the package link and its peer dependencies to
-`package.json`:
-
-```json
-{
-    "devDependencies": {
-        "@hotwired/stimulus": "^3.0.0",
-        "@hotwired/turbo": "^8.0.0",
-        "@tacticmedia/qa-bundle": "file:vendor/tacticmedia/qa-bundle/assets"
-    }
-}
-```
-
-Run `npm install` and rebuild after `composer require`. `@hotwired/turbo` is necessary:
-`annotate_controller.js` imports `visit` at module scope, so an unresolved Turbo stops the complete
-annotate controller and not the keyboard navigation only.
-
-Those two hosts must also specify how their JavaScript reaches the page, because the default
-`scripts` block calls `importmap()`. Override the layout:
-
-```twig
-{# templates/bundles/TacticMediaQaBundle/layout.html.twig #}
-{% extends '@!TacticMediaQa/layout.html.twig' %}
-
-{% block scripts %}
-    {{ encore_entry_script_tags('app') }}
-{% endblock %}
-```
-
-Use `{{ reprise_entry_script_tags('app') }}` for Reprise. Give the name of the entrypoint that
-starts your Stimulus application; `app` is the default from the recipe. `@!` is the TwigBundle
-reference to the copy of the template in the bundle, which lets the override extend the file that it
-replaces.
-
-`symfony/reprise` needs PHP 8.4 and Symfony 7.4 or 8.x, so a host below PHP 8.4, or on Symfony 6.4,
-is on Encore or AssetMapper.
+An override of the `scripts` block must keep its tag, for example with `{{ parent() }}`. The page
+does not need the entrypoint of the host.
 
 ## Styling
 
@@ -92,17 +50,18 @@ Tailwind's automatic detection, and an explicit `@source` is always scanned.
 @source "../../vendor/tacticmedia/qa-bundle/templates";
 ```
 
+After `composer install --no-dev` that directory does not exist. Tailwind builds without those
+utilities and does not fail.
+
 `demo/` contains that override in an operating AssetMapper host. `demo/README.md` describes it.
 
 ## Content security policy
 
-The annotate controller sets the overlay geometry through the CSSOM, which `style-src` does not
-control, so the selection needs no change to the policy. The default `scripts` block writes an
-inline importmap and an inline module script: give them a nonce through
-`framework.asset_mapper.importmap_script_attributes`, or override the block. The importmap also
-emits an inline loader for the es-module-shims polyfill from `https://ga.jspm.io`: allow that host
-in `script-src`, add `es-module-shims` to `importmap.php`, or set
-`framework.asset_mapper.importmap_polyfill: false`. The default `styles` block loads Tailwind from
-a CDN, which needs `script-src https://cdn.jsdelivr.net`, and the browser build injects a `style`
-element at run time, so a policy that restricts `style-src` needs `'unsafe-inline'` for it, unless
-you also override the block.
+The default `scripts` block loads one module from the same origin, so `script-src 'self'` permits
+it with no nonce. The annotate controller sets the overlay geometry through the CSSOM, which
+`style-src` does not control, so the selection needs no change to the policy. Turbo adds a `style`
+element for its progress bar and takes the nonce from `<meta name="csp-nonce">`. Without that
+element, a policy that restricts `style-src` blocks the style of the progress bar. The default
+`styles` block loads Tailwind from a CDN, which needs `script-src https://cdn.jsdelivr.net`, and the
+browser build injects a `style` element at run time, so a policy that restricts `style-src` needs
+`'unsafe-inline'` for it, unless you also override the block.

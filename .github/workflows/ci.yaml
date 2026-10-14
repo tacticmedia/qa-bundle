@@ -241,6 +241,29 @@ jobs:
           path: ${{ runner.temp }}/shots
           if-no-files-found: ignore
 
+  # A host that installs the bundle with --dev builds its production assets without it.
+  production-build:
+    name: Production build (${{ matrix.host }})
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - host: with StimulusBundle
+            packages: symfony/stimulus-bundle
+          - host: without StimulusBundle
+            packages: ''
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: gd, intl
+          coverage: none
+
+      - run: tests/Host/production-build.sh "${{ runner.temp }}/host" ${{ matrix.packages }}
+
   docker:
     name: Review image
     runs-on: ubuntu-latest

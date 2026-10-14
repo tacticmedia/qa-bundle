@@ -51,6 +51,7 @@ final class BundleConfigurationTest extends TestCase
     {
         $container = new ContainerBuilder(new ParameterBag([
             'kernel.project_dir' => '/app',
+            'kernel.build_dir' => '/app/var/cache/test',
             'kernel.environment' => 'test',
             'kernel.debug' => true,
         ]));

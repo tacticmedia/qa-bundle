@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "6fb3a5ffb3ba3cc2a9d3f4f738c94fa0",
+    "content-hash": "3853b7c8ab31b43579cd1d21f57b7ac5",
     "packages": [
         {
             "name": "composer/semver",
@@ -3165,16 +3165,16 @@
         },
         {
             "name": "symfony/stimulus-bundle",
-            "version": "v3.4.0",
+            "version": "v3.6.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/stimulus-bundle.git",
-                "reference": "510a7a1054acd4d24b2b8b09597bb9406f247193"
+                "reference": "3a042de9aff0ce706990c8cccd70661222c06e9e"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/stimulus-bundle/zipball/510a7a1054acd4d24b2b8b09597bb9406f247193",
-                "reference": "510a7a1054acd4d24b2b8b09597bb9406f247193",
+                "url": "https://api.github.com/repos/symfony/stimulus-bundle/zipball/3a042de9aff0ce706990c8cccd70661222c06e9e",
+                "reference": "3a042de9aff0ce706990c8cccd70661222c06e9e",
                 "shasum": ""
             },
             "require": {
@@ -3184,7 +3184,7 @@
                 "symfony/deprecation-contracts": "^2.0|^3.0",
                 "symfony/finder": "^7.4|^8.0",
                 "symfony/http-kernel": "^7.4|^8.0",
-                "twig/twig": "^2.15.3|^3.8"
+                "twig/twig": "^2.15.3|^3.8|^4.0"
             },
             "conflict": {
                 "symfony/asset-mapper": "<6.4"
@@ -3217,7 +3217,7 @@
                 "symfony-ux"
             ],
             "support": {
-                "source": "https://github.com/symfony/stimulus-bundle/tree/v3.4.0"
+                "source": "https://github.com/symfony/stimulus-bundle/tree/v3.6.0"
             },
             "funding": [
                 {
@@ -3237,7 +3237,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-07-25T17:54:47+00:00"
+            "time": "2026-10-13T08:04:44+00:00"
         },
         {
             "name": "symfony/string",
@@ -3995,7 +3995,7 @@
             "dist": {
                 "type": "path",
                 "url": "..",
-                "reference": "49391c3c72fd3ce3f64a6afc2761f18e3ecafbb3"
+                "reference": "456e7c1e3b22557c41017d6cab303e655720a8e4"
             },
             "require": {
                 "ext-gd": "*",
@@ -4010,13 +4010,9 @@
                 "symfony/polyfill-php84": "^1.31",
                 "symfony/routing": "^6.4|^7.4|^8.1",
                 "symfony/security-csrf": "^6.4|^7.4|^8.1",
-                "symfony/stimulus-bundle": "^2.30|^3.4",
                 "symfony/twig-bundle": "^6.4|^7.4|^8.1",
                 "symfony/uid": "^6.4|^7.4|^8.1",
                 "twig/twig": "^3.28"
-            },
-            "conflict": {
-                "symfony/asset-mapper": "<6.4"
             },
             "require-dev": {
                 "dbrekelmans/bdi": "^1.4",
@@ -4025,7 +4021,6 @@
                 "phpstan/phpstan-phpunit": "^2.0",
                 "phpunit/phpunit": "^11.5|^12.5|^13.3",
                 "playwright-php/playwright": "^1.5",
-                "symfony/asset-mapper": "^6.4|^7.4|^8.1",
                 "symfony/browser-kit": "^6.4|^7.4|^8.1",
                 "symfony/css-selector": "^6.4|^7.4|^8.1",
                 "symfony/dom-crawler": "^6.4|^7.4|^8.1",
@@ -4035,7 +4030,6 @@
             },
             "suggest": {
                 "playwright-php/playwright": "Needed by the PlaywrightJourneyScreenshots capture trait, version 1.4 or later, with Node.js 20 or later; the review page does not use it.",
-                "symfony/asset-mapper": "To serve the bundle's Stimulus controllers without a JavaScript build step. A Webpack Encore or Symfony Reprise host takes them from node_modules instead.",
                 "symfony/panther": "Needed by the JourneyScreenshots capture trait; the review page does not use it."
             },
             "type": "symfony-bundle",
@@ -4091,8 +4085,7 @@
                 "playwright",
                 "qa",
                 "screenshots",
-                "symfony",
-                "symfony-ux"
+                "symfony"
             ],
             "transport-options": {
                 "relative": true

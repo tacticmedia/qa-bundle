@@ -13,7 +13,6 @@ use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
 use Symfony\Reprise\RepriseBundle;
-use Symfony\UX\StimulusBundle\StimulusBundle;
 use TacticMedia\QaBundle\TacticMediaQaBundle;
 
 /**
@@ -32,7 +31,6 @@ final class RepriseKernel extends Kernel
     {
         yield new FrameworkBundle();
         yield new TwigBundle();
-        yield new StimulusBundle();
         yield new RepriseBundle();
         yield new TacticMediaQaBundle();
     }
@@ -52,7 +50,6 @@ final class RepriseKernel extends Kernel
             'php_errors' => ['log' => true],
             'session' => ['handler_id' => null, 'storage_factory_id' => 'session.storage.factory.mock_file'],
             'assets' => true,
-            'asset_mapper' => ['enabled' => false],
         ]);
 
         $container->extension('twig', ['strict_variables' => true]);

@@ -209,6 +209,48 @@ final class ScreenshotReviewControllerTest extends WebTestCase
         self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
     }
 
+    #[TestDox('The layout module and each module it imports are served, and they are all of assets/dist')]
+    public function testTheAssetActionServesTheModuleGraph(): void
+    {
+        $client = self::createClient();
+        $pending = ['review.js'];
+        $served = [];
+
+        while (null !== $file = array_pop($pending)) {
+            if (\in_array($file, $served, true)) {
+                continue;
+            }
+
+            $client->request('GET', '/_dev/screenshots/assets/'.$file);
+
+            self::assertResponseIsSuccessful($file);
+            self::assertResponseHeaderSame('Content-Type', 'text/javascript; charset=UTF-8');
+            self::assertResponseHeaderSame('Cache-Control', 'no-cache, private');
+
+            $served[] = $file;
+            preg_match_all("#(?:from|import) '\\./([^']+)'#", $client->getInternalResponse()->getContent(), $imports);
+            array_push($pending, ...$imports[1]);
+        }
+
+        $shipped = array_map(basename(...), glob(\dirname(__DIR__, 2).'/assets/dist/*.js') ?: []);
+        sort($served);
+        sort($shipped);
+
+        self::assertSame($shipped, $served);
+    }
+
+    #[TestDox('The asset action serves no file that assets/dist does not contain')]
+    public function testTheAssetActionStaysInItsDirectory(): void
+    {
+        $client = self::createClient();
+
+        $client->request('GET', '/_dev/screenshots/assets/missing.js');
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+
+        $client->request('GET', '/_dev/screenshots/assets/'.rawurlencode('../../composer.json'));
+        self::assertResponseStatusCodeSame(Response::HTTP_NOT_FOUND);
+    }
+
     #[TestDox('A whole-screen note is stored and shown on the annotate page')]
     public function testAWholeScreenNoteRoundTrips(): void
     {

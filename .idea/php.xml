@@ -87,7 +87,6 @@
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php81" />
       <path value="$PROJECT_DIR$/vendor/symfony/browser-kit" />
       <path value="$PROJECT_DIR$/vendor/symfony/uid" />
-      <path value="$PROJECT_DIR$/vendor/symfony/asset-mapper" />
       <path value="$PROJECT_DIR$/vendor/symfony/config" />
       <path value="$PROJECT_DIR$/vendor/symfony/http-kernel" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php85" />
@@ -104,7 +103,6 @@
       <path value="$PROJECT_DIR$/vendor/symfony/finder" />
       <path value="$PROJECT_DIR$/vendor/symfony/polyfill-php84" />
       <path value="$PROJECT_DIR$/vendor/symfony/twig-bundle" />
-      <path value="$PROJECT_DIR$/vendor/symfony/stimulus-bundle" />
       <path value="$PROJECT_DIR$/vendor/symfony/clock" />
       <path value="$PROJECT_DIR$/vendor/symfony/cache-contracts" />
       <path value="$PROJECT_DIR$/vendor/symfony/dependency-injection" />
@@ -217,13 +215,11 @@
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/console" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/password-hasher" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/clock" />
-      <path value="$PROJECT_DIR$/docker/review/vendor/symfony/stimulus-bundle" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/deprecation-contracts" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/security-core" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/string" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/polyfill-php85" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/http-kernel" />
-      <path value="$PROJECT_DIR$/docker/review/vendor/symfony/http-client" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/polyfill-php84" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/finder" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/dependency-injection" />
@@ -231,12 +227,10 @@
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/error-handler" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/var-exporter" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/http-foundation" />
-      <path value="$PROJECT_DIR$/docker/review/vendor/symfony/http-client-contracts" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/service-contracts" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/routing" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/runtime" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/event-dispatcher" />
-      <path value="$PROJECT_DIR$/docker/review/vendor/symfony/asset-mapper" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/uid" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/config" />
       <path value="$PROJECT_DIR$/docker/review/vendor/symfony/translation-contracts" />

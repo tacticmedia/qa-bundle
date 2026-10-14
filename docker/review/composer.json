@@ -5,11 +5,9 @@
     "license": "MIT",
     "require": {
         "php": ">=8.4",
-        "symfony/asset-mapper": "8.1.*",
         "symfony/console": "8.1.*",
         "symfony/framework-bundle": "8.1.*",
         "symfony/runtime": "8.1.*",
-        "symfony/stimulus-bundle": "^2.30|^3.4",
         "symfony/twig-bundle": "8.1.*",
         "tacticmedia/qa-bundle": "dev-main"
     },

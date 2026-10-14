@@ -1,4 +1,4 @@
-import { Controller } from '@hotwired/stimulus';
+import { Controller } from './stimulus.js';
 
 /*
  * Marks the descendant the URL fragment names with data-anchored, so a Tailwind
@@ -7,10 +7,7 @@ import { Controller } from '@hotwired/stimulus';
  * CSS :target cannot do this: Turbo navigates with history.pushState, which
  * does not change the target element of the document.
  *
- * Usage (always via the Twig helpers, never hand-written data-* attributes):
- *   <div {{ stimulus_controller('qa-anchor-highlight') }}>
- *       <a id="screen-Foo" class="data-anchored:ring-2">...</a>
- *   </div>
+ * Markup: templates/group.html.twig.
  */
 export default class extends Controller {
     connect() {

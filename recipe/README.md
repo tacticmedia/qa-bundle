@@ -17,23 +17,9 @@ higher directory exists.
 
 ## Contents, and the reason for each part
 
-`manifest.json` registers the bundle in `dev` and `test`. Both environments are necessary:
-
-- Composer writes the `@tacticmedia/qa-bundle` block into the host's `assets/controllers.json`,
-  because `composer.json` contains the `symfony-ux` keyword. That file is environment-agnostic.
-- The AssetMapper path that the block resolves against comes from
-  `TacticMediaQaBundle::prependExtension()`, which runs only where the bundle is registered.
-
-Where the two disagree, `symfony/stimulus-bundle` throws
-`Could not find an asset mapper path that points to the "annotate" controller in package
-"tacticmedia/qa-bundle", defined in controllers.json.` A host that builds a container in `test`, for
-example through `WebTestCase`, needs the registration as much as `dev` does. See
-[docs/host-setup.md](../docs/host-setup.md).
-
-The recipe also fixes an ordering problem. Flex installs recipes before it synchronises
-`controllers.json` and before the `importmap:require` calls that follow it, so with the recipe the
-host is never in the broken state. Without it, `composer require` writes the block into a host that
-has no `config/bundles.php` entry, and the next container build fails.
+`manifest.json` registers the bundle in `dev`, where the page runs, and in `test`, where a host
+opens the page from a `WebTestCase`. A host installs the bundle with `--dev`, so no other
+environment can load it.
 
 `config/routes/qa.yaml` publishes `/_dev/screenshots` in `dev`. `config/packages/qa.yaml` contains
 the two options as comments.

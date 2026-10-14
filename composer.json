@@ -9,8 +9,7 @@
         "playwright",
         "qa",
         "screenshots",
-        "symfony",
-        "symfony-ux"
+        "symfony"
     ],
     "require": {
         "php": ">=8.2",
@@ -25,7 +24,6 @@
         "symfony/polyfill-php84": "^1.31",
         "symfony/routing": "^6.4|^7.4|^8.1",
         "symfony/security-csrf": "^6.4|^7.4|^8.1",
-        "symfony/stimulus-bundle": "^2.30|^3.4",
         "symfony/twig-bundle": "^6.4|^7.4|^8.1",
         "symfony/uid": "^6.4|^7.4|^8.1",
         "twig/twig": "^3.28"
@@ -37,7 +35,6 @@
         "phpstan/phpstan-phpunit": "^2.0",
         "phpunit/phpunit": "^11.5|^12.5|^13.3",
         "playwright-php/playwright": "^1.5",
-        "symfony/asset-mapper": "^6.4|^7.4|^8.1",
         "symfony/browser-kit": "^6.4|^7.4|^8.1",
         "symfony/css-selector": "^6.4|^7.4|^8.1",
         "symfony/dom-crawler": "^6.4|^7.4|^8.1",
@@ -45,12 +42,8 @@
         "symfony/runtime": "^6.4|^7.4|^8.1",
         "symfony/webpack-encore-bundle": "^2.4"
     },
-    "conflict": {
-        "symfony/asset-mapper": "<6.4"
-    },
     "suggest": {
         "playwright-php/playwright": "Needed by the PlaywrightJourneyScreenshots capture trait, version 1.4 or later, with Node.js 20 or later; the review page does not use it.",
-        "symfony/asset-mapper": "To serve the bundle's Stimulus controllers without a JavaScript build step. A Webpack Encore or Symfony Reprise host takes them from node_modules instead.",
         "symfony/panther": "Needed by the JourneyScreenshots capture trait; the review page does not use it."
     },
     "minimum-stability": "stable",

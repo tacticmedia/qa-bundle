@@ -56,7 +56,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/sebastian/version" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/staabm/side-effects-detector" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/asset" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/asset-mapper" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/browser-kit" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/cache" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/cache-contracts" />
@@ -96,7 +95,6 @@
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/security-core" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/security-csrf" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/service-contracts" />
-      <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/stimulus-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/stopwatch" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/string" />
       <excludeFolder url="file://$MODULE_DIR$/vendor/symfony/translation-contracts" />
@@ -198,7 +196,6 @@
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/psr/container" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/psr/event-dispatcher" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/psr/log" />
-      <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/asset-mapper" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/cache" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/cache-contracts" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/clock" />
@@ -212,8 +209,6 @@
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/filesystem" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/finder" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/framework-bundle" />
-      <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/http-client" />
-      <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/http-client-contracts" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/http-foundation" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/http-kernel" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/password-hasher" />
@@ -230,7 +225,6 @@
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/security-core" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/security-csrf" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/service-contracts" />
-      <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/stimulus-bundle" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/string" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/translation-contracts" />
       <excludeFolder url="file://$MODULE_DIR$/docker/review/vendor/symfony/twig-bridge" />

@@ -13,7 +13,6 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel as BaseKernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
-use Symfony\UX\StimulusBundle\StimulusBundle;
 use TacticMedia\QaBundle\Controller\ScreenshotReviewController;
 use TacticMedia\QaBundle\TacticMediaQaBundle;
 
@@ -33,7 +32,6 @@ final class Kernel extends BaseKernel
     {
         yield new FrameworkBundle();
         yield new TwigBundle();
-        yield new StimulusBundle();
         yield new TacticMediaQaBundle();
     }
 
@@ -56,7 +54,6 @@ final class Kernel extends BaseKernel
             'handle_all_throwables' => true,
             'php_errors' => ['log' => true],
             'session' => ['handler_id' => null, 'cookie_secure' => 'auto', 'cookie_samesite' => 'lax'],
-            'asset_mapper' => ['paths' => ['assets' => '']],
         ]);
 
         $container->extension('qa', [

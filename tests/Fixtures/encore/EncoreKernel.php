@@ -12,16 +12,11 @@ use Symfony\Component\DependencyInjection\Loader\Configurator\ContainerConfigura
 use Symfony\Component\HttpKernel\Bundle\BundleInterface;
 use Symfony\Component\HttpKernel\Kernel;
 use Symfony\Component\Routing\Loader\Configurator\RoutingConfigurator;
-use Symfony\UX\StimulusBundle\StimulusBundle;
 use Symfony\WebpackEncoreBundle\WebpackEncoreBundle;
 use TacticMedia\QaBundle\TacticMediaQaBundle;
 
 /**
- * A Webpack Encore host. On a real Encore host `framework.asset_mapper` is off, so TwigBundle's
- * ExtensionPass drops twig.extension.importmap; here TwigBundle never loads it, because
- * symfony/asset-mapper is a dev dependency. In both cases the page renders with no importmap()
- * function, which is the condition that the layout override in this host's templates/bundles/
- * must handle.
+ * A Webpack Encore host with no override of the review layout.
  */
 final class EncoreKernel extends Kernel
 {
@@ -34,7 +29,6 @@ final class EncoreKernel extends Kernel
     {
         yield new FrameworkBundle();
         yield new TwigBundle();
-        yield new StimulusBundle();
         yield new WebpackEncoreBundle();
         yield new TacticMediaQaBundle();
     }
@@ -54,7 +48,6 @@ final class EncoreKernel extends Kernel
             'php_errors' => ['log' => true],
             'session' => ['handler_id' => null, 'storage_factory_id' => 'session.storage.factory.mock_file'],
             'assets' => true,
-            'asset_mapper' => ['enabled' => false],
         ]);
 
         $container->extension('twig', ['strict_variables' => true]);

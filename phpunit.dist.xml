@@ -18,6 +18,10 @@
         <server name="KERNEL_CLASS" value="TacticMedia\QaBundle\Tests\Fixtures\app\TestKernel" />
         <server name="PANTHER_APP_ENV" value="test" force="true" />
         <server name="PANTHER_WEB_SERVER_DIR" value="./tests/Fixtures/app/public" />
+        <!-- Below PHP 8.4 the built-in server answers 404 for a missing path with an extension,
+             such as the .png and .js routes of the bundle, unless a router handles it. The server
+             runs in PANTHER_WEB_SERVER_DIR, so the path is relative to it. -->
+        <server name="PANTHER_WEB_SERVER_ROUTER" value="index.php" />
     </php>
 
     <testsuites>
